@@ -92,8 +92,8 @@ The replay profile uses ParaNMR fixed assignment. It validates the forward data 
 ## Development
 
 ```bash
-PYTHONPATH=src python3 -m pytest -m 'not integration'
-PYTHONPATH=src python3 -m pytest -m integration
+python3 -m pytest -m 'not integration'
+python3 -m pytest -m integration
 ```
 
 The integration suite launches the real `paranmr` executable and must run against the compatible ParaNMR version. Every generated CSV records `ParaNMR-Synth` version provenance in its comment header.
