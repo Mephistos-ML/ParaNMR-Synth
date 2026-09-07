@@ -1,4 +1,4 @@
-"""Command-line entrypoint for paraNMR-Synth."""
+"""Command-line entrypoint for ParaNMR-Synth."""
 
 from __future__ import annotations
 
@@ -6,8 +6,9 @@ import argparse
 import logging
 from pathlib import Path
 
-from paranmr_synth.app.pipelines import run_generate
-from paranmr_synth.cfg import GenerateConfig
+from paranmr_synth.app.pipelines.dataset_export import generate_dataset
+from paranmr_synth.app.pipelines.dataset_validation import validate_dataset_case
+from paranmr_synth.cfg.dataset import DatasetGenerationConfig
 from paranmr_synth.cli.set_logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -40,15 +41,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="show errors only",
     )
 
-    run_parser = subparsers.add_parser(
-        "run",
-        help="run generation from YAML",
-        description="Generate tensor series from a YAML config file.",
+    dataset_parser = subparsers.add_parser(
+        "dataset",
+        help="generate replayable synthetic cases and a paired ML dataset",
     )
-    run_parser.add_argument(
-        "config_file",
-        help="YAML config path",
+    dataset_subparsers = dataset_parser.add_subparsers(dest="dataset_command")
+    dataset_generate_parser = dataset_subparsers.add_parser(
+        "generate",
+        help="generate a dataset from YAML",
     )
+    dataset_generate_parser.add_argument("config_file", help="YAML config path")
+    dataset_generate_parser.add_argument(
+        "--output",
+        help="output directory (defaults to a sibling directory named after project.name)",
+    )
+    dataset_validate_parser = dataset_subparsers.add_parser(
+        "validate",
+        help="compare a completed ParaNMR fit with synthetic ground truth",
+    )
+    dataset_validate_parser.add_argument("case_dir", help="case directory")
 
     return parser
 
@@ -69,19 +80,21 @@ def main() -> int:
         print(__version__)
         return 0
 
-    if args.command == "run":
-        logger.info("Loading generation config from %s", args.config_file)
+    if args.command == "dataset" and args.dataset_command == "generate":
         config_path = Path(args.config_file).resolve()
-        config = GenerateConfig.from_file(config_path)
-        spec = config.to_series_generator_spec()
-        output_name = config.output_name if config.output_name is not None else config_path.stem
-        written_files = run_generate(
-            spec,
-            output_dir=config_path.parent / output_name,
-            seed=config.seed,
-            series_metadata=config.to_report_metadata(),
+        config = DatasetGenerationConfig.from_file(config_path)
+        output_dir = (
+            Path(args.output).resolve()
+            if args.output
+            else config_path.parent / config.project.name
         )
-        logger.info("Generated %d tensor series file(s)", len(written_files))
+        generated_root = generate_dataset(config=config, output_dir=output_dir)
+        logger.info("Synthetic dataset written to %s", generated_root)
+        return 0
+
+    if args.command == "dataset" and args.dataset_command == "validate":
+        report_file = validate_dataset_case(args.case_dir)
+        logger.info("Synthetic validation report written to %s", report_file)
         return 0
 
     parser.print_help()

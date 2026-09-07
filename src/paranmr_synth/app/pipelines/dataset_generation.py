@@ -11,7 +11,6 @@ from paranmr.app.loaders.paramag_centre_load import load_paramagnetic_centre
 from paranmr.core.build.elstate import build_electronic_state
 from paranmr.core.build.hfc import build_hfc_from_pdip
 from paranmr.core.domain.mol import Molecule
-from paranmr.app.policies.averaging import resolve_average_shift_groups
 from paranmr.app.policies.linewidth_r6 import resolve_r6_linewidth_inputs
 from paranmr.core.fitting.susceptibility.linewidths import predict_r6_widths_by_atom_label
 from paranmr.core.fitting.susceptibility.moments.forward import (
@@ -31,14 +30,10 @@ from paranmr.core.fitting.susceptibility.moments.gaussian import (
 from paranmr.tools.coords.xyz_fmt import add_label_indices, load_xyz
 
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
-from paranmr_synth.core.generators import (
-    LinewidthLatents,
-    SusceptibilityLatents,
-    generate_diamagnetic_shifts,
-    generate_linewidth_latents,
-    generate_susceptibility_latents,
-)
-from paranmr_synth.core.dataset import DatasetRecord, TensorTarget
+from paranmr_synth.core.dataset.records import DatasetRecord, TensorTarget
+from paranmr_synth.core.generators.diamagnetic import generate_diamagnetic_shifts
+from paranmr_synth.core.generators.linewidth import LinewidthLatents, generate_linewidth_latents
+from paranmr_synth.core.generators.susceptibility import SusceptibilityLatents, generate_susceptibility_latents
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +46,17 @@ class SyntheticPeak:
     area: float
 
 
+@dataclass(frozen=True, slots=True)
+class GeneratedCase:
+    """Complete synthetic case used for replayable and ML exports."""
+
+    record: DatasetRecord
+    susceptibility: SusceptibilityLatents
+    linewidth: LinewidthLatents
+    peaks: tuple[SyntheticPeak, ...]
+    diamagnetic_shifts: dict[str, float]
+
+
 def generate_case(
     *,
     config: DatasetGenerationConfig,
@@ -59,6 +65,22 @@ def generate_case(
     case_index: int,
 ) -> DatasetRecord:
     """Generate one complete in-memory synthetic moment-matching case."""
+    return generate_case_artifacts(
+        config=config,
+        molecule=molecule,
+        geometry_checksum=geometry_checksum,
+        case_index=case_index,
+    ).record
+
+
+def generate_case_artifacts(
+    *,
+    config: DatasetGenerationConfig,
+    molecule: Molecule,
+    geometry_checksum: str,
+    case_index: int,
+) -> GeneratedCase:
+    """Generate all data required to replay one synthetic ParaNMR case."""
     susceptibility = generate_susceptibility_latents(
         config=config,
         geometry_checksum=geometry_checksum,
@@ -75,14 +97,19 @@ def generate_case(
         linewidth=linewidth,
     )
     moments = peaks_to_moments(peaks=peaks, moment_labels=config.moment_labels)
-    return DatasetRecord(
-        sample_id=f"{config.project_name}-{geometry_checksum[:12]}-{case_index:06d}",
-        series_id=geometry_checksum,
-        split="unassigned",
-        temperature_k=config.temperature_k,
-        magnetic_field_t=config.magnetic_field_t,
+    record = DatasetRecord(
+        sample_id=f"{config.project.name}-{geometry_checksum[:12]}-{case_index:06d}",
+        temperature_k=config.experiment.temperature_k,
+        magnetic_field_t=config.experiment.magnetic_field_t,
         moments=moments,
         target=latents_to_target(susceptibility=susceptibility, linewidth=linewidth),
+    )
+    return GeneratedCase(
+        record=record,
+        susceptibility=susceptibility,
+        linewidth=linewidth,
+        peaks=peaks,
+        diamagnetic_shifts={nucleus.label: nucleus.shift.dia for nucleus in molecule.nuclei},
     )
 
 
@@ -96,7 +123,7 @@ def generate_cases(config: DatasetGenerationConfig) -> tuple[DatasetRecord, ...]
             geometry_checksum=checksum,
             case_index=case_index,
         )
-        for case_index in range(config.n_cases)
+        for case_index in range(config.project.n_cases)
     )
 def peaks_to_moments(
     *,
@@ -145,27 +172,27 @@ def latents_to_target(
 
 def prepare_dataset_molecule(config: DatasetGenerationConfig) -> tuple[Molecule, str]:
     """Load one geometry and attach ParaNMR-ready synthetic experiment state."""
-    labels, coordinates = load_xyz(config.hyperfine_file)
+    labels, coordinates = load_xyz(config.hyperfine.file)
     indexed_labels = add_label_indices(labels)
     molecule = Molecule.from_labels_coords(
         labels=indexed_labels,
         coords=coordinates,
         elements=config.nuclei_include,
     )
-    load_paramagnetic_centre(molecule, list(config.paramagnetic_centre))
+    load_paramagnetic_centre(molecule, list(config.hyperfine.paramagnetic_centre))
     molecule.electronic = build_electronic_state(
-        spin_S=config.spin,
-        orbit_L=config.orbit,
-        total_J=config.total_momentum_j,
+        spin_S=config.hyperfine.spin,
+        orbit_L=config.hyperfine.orbit,
+        total_J=config.hyperfine.total_momentum_j,
     )
     build_hfc_from_pdip(molecule)
     checksum = geometry_checksum(labels=tuple(molecule.labels), coordinates=molecule.coords)
     dia_shifts = generate_diamagnetic_shifts(
         atom_labels=tuple(nucleus.label for nucleus in molecule.nuclei),
         geometry_checksum=checksum,
-        seed=config.seed,
-        range_min_ppm=config.dia_range_min_ppm,
-        range_max_ppm=config.dia_range_max_ppm,
+        seed=config.project.seed,
+        range_min_ppm=config.diamagnetic.range_min_ppm,
+        range_max_ppm=config.diamagnetic.range_max_ppm,
     )
     for nucleus in molecule.nuclei:
         nucleus.shift.dia = dia_shifts[nucleus.label]
@@ -199,20 +226,12 @@ def simulate_peaks(
         "beta": susceptibility.beta,
         "gamma": susceptibility.gamma,
     }
-    average_labels = tuple(
-        tuple(group)
-        for group in resolve_average_shift_groups(
-            molecule=molecule,
-            average_shifts="methyls",
-        )
-    )
     packages = sort_packages_by_center(
         calculated_signal_packages_from_parameters(
             model=IsoAxRhoEulerFitter,
             parameters=parameters,
             nuclei=molecule.nuclei,
             include_diamagnetic=True,
-            average_labels=average_labels,
         )
     )
     linewidth_inputs = resolve_r6_linewidth_inputs(
