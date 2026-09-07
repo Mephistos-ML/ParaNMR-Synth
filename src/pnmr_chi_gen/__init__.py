@@ -1,1 +1,0 @@
-"""pnmr-chi-gen package."""

@@ -5,9 +5,9 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pnmr-chi-gen"
+name = "ParaNMR-Synth"
 dynamic = ["version"]
-description = "A standalone generator of susceptibility tensor series for pNMR simulations"
+description = "Reproducible synthetic pNMR dataset generator for ParaNMR workflows"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
@@ -21,6 +21,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "numpy",
+    "paranmr",
     "pyyaml",
 ]
 
@@ -33,21 +34,21 @@ dev = [
 ]
 
 [project.scripts]
-pnmr_chi_gen = "pnmr_chi_gen.cli.main:main"
+paranmr-synth = "paranmr_synth.cli.main:main"
 
 [project.urls]
-Homepage = "https://github.com/Mephistos-ML/pnmr-chi-gen"
-Repository = "https://github.com/Mephistos-ML/pnmr-chi-gen"
-Issues = "https://github.com/Mephistos-ML/pnmr-chi-gen/issues"
+Homepage = "https://github.com/Mephistos-ML/ParaNMR-Synth"
+Repository = "https://github.com/Mephistos-ML/ParaNMR-Synth"
+Issues = "https://github.com/Mephistos-ML/ParaNMR-Synth/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.dynamic]
-version = {attr = "pnmr_chi_gen.__version__.__version__"}
+version = {attr = "paranmr_synth.__version__.__version__"}
 
 [tool.semantic_release]
-version_variables = ["src/pnmr_chi_gen/__version__.py:__version__"]
+version_variables = ["src/paranmr_synth/__version__.py:__version__"]
 branch = "main"
 commit_parser = "conventional"
 allow_zero_version = true
@@ -66,6 +67,7 @@ select = ["E", "F", "I"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -q"
+pythonpath = ["src"]
 markers = [
     "integration: end-to-end example/CLI integration tests (may be slow)",
     "smoke: fast smoke tests for CLI/entrypoints",
