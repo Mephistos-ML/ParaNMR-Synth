@@ -1,1 +1,0 @@
-"""Core tensor-generation logic."""
