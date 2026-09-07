@@ -8,6 +8,8 @@ from typing import Any
 
 import yaml
 
+from paranmr_synth.core.generators import ParameterSpec
+
 
 @dataclass(frozen=True, slots=True)
 class DatasetGenerationConfig:
@@ -28,7 +30,15 @@ class DatasetGenerationConfig:
     magnetic_field_t: float
     number_of_moments: int
     linewidth_method: str
+    linewidth_p1: ParameterSpec
+    linewidth_p2: ParameterSpec
     susceptibility_model: str
+    susceptibility_iso: ParameterSpec
+    susceptibility_ax: ParameterSpec
+    susceptibility_rho_over_ax: ParameterSpec
+    susceptibility_alpha: ParameterSpec
+    susceptibility_beta: ParameterSpec
+    susceptibility_gamma: ParameterSpec
 
     @classmethod
     def from_file(cls, file_name: str | Path) -> "DatasetGenerationConfig":
@@ -59,6 +69,11 @@ class DatasetGenerationConfig:
         model = str(susceptibility["model"]).lower()
         if model != "isoaxrho_euler":
             raise ValueError("susceptibility.model must be 'isoaxrho_euler'")
+        linewidth_variables = _mapping(linewidth, "variables")
+        susceptibility_variables = _mapping(susceptibility, "variables")
+        rho_over_ax = ParameterSpec.from_raw(susceptibility_variables["rho_over_ax"])
+        if rho_over_ax.lower < 0.0 or rho_over_ax.upper > 1.0 / 3.0:
+            raise ValueError("rho_over_ax bounds must lie within [0, 1/3]")
         centre = tuple(float(value) for value in hyperfine["paramagnetic_centre"])
         if len(centre) != 3:
             raise ValueError("hyperfine.paramagnetic_centre must have three values")
@@ -86,7 +101,15 @@ class DatasetGenerationConfig:
             magnetic_field_t=float(experiment["magnetic_field_t"]),
             number_of_moments=number_of_moments,
             linewidth_method=linewidth_method,
+            linewidth_p1=ParameterSpec.from_raw(linewidth_variables["p1"]),
+            linewidth_p2=ParameterSpec.from_raw(linewidth_variables["p2"]),
             susceptibility_model=model,
+            susceptibility_iso=ParameterSpec.from_raw(susceptibility_variables["iso"]),
+            susceptibility_ax=ParameterSpec.from_raw(susceptibility_variables["ax"]),
+            susceptibility_rho_over_ax=rho_over_ax,
+            susceptibility_alpha=ParameterSpec.from_raw(susceptibility_variables["alpha"]),
+            susceptibility_beta=ParameterSpec.from_raw(susceptibility_variables["beta"]),
+            susceptibility_gamma=ParameterSpec.from_raw(susceptibility_variables["gamma"]),
         )
 
     @property
