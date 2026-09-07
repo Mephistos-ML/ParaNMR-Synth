@@ -22,11 +22,19 @@ from paranmr.core.fitting.susceptibility.moments.forward import (
 from paranmr.core.fitting.susceptibility.models.isoaxrho_euler import (
     IsoAxRhoEulerFitter,
 )
+from paranmr.core.fitting.susceptibility.moments.descriptors import (
+    compute_gaussian_mixture_moments,
+)
+from paranmr.core.fitting.susceptibility.moments.gaussian import (
+    gaussian_peak_representation,
+)
 from paranmr.tools.coords.xyz_fmt import add_label_indices, load_xyz
 
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
 from paranmr_synth.core.sampling import sample_diamagnetic_shifts
 from paranmr_synth.core.sampling.latents import SampledLatents
+from paranmr_synth.core.dataset import DatasetRecord, TensorTarget
+from paranmr_synth.core.sampling import sample_latents
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +45,87 @@ class SyntheticPeak:
     center_ppm: float
     fwhm_ppm: float
     area: float
+
+
+def generate_case(
+    *,
+    config: DatasetGenerationConfig,
+    molecule: Molecule,
+    geometry_checksum: str,
+    case_index: int,
+) -> DatasetRecord:
+    """Generate one complete in-memory synthetic moment-matching case."""
+    latents = sample_latents(
+        config=config,
+        geometry_checksum=geometry_checksum,
+        case_index=case_index,
+    )
+    peaks = simulate_peaks(molecule=molecule, latents=latents)
+    moments = peaks_to_moments(peaks=peaks, moment_labels=config.moment_labels)
+    return DatasetRecord(
+        sample_id=f"{config.project_name}-{geometry_checksum[:12]}-{case_index:06d}",
+        series_id=geometry_checksum,
+        split="unassigned",
+        temperature_k=config.temperature_k,
+        magnetic_field_t=config.magnetic_field_t,
+        moments=moments,
+        target=latents_to_target(latents),
+    )
+
+
+def generate_cases(config: DatasetGenerationConfig) -> tuple[DatasetRecord, ...]:
+    """Generate the configured batch of complete synthetic cases."""
+    molecule, checksum = prepare_dataset_molecule(config)
+    return tuple(
+        generate_case(
+            config=config,
+            molecule=molecule,
+            geometry_checksum=checksum,
+            case_index=case_index,
+        )
+        for case_index in range(config.n_cases)
+    )
+def peaks_to_moments(
+    *,
+    peaks: tuple[SyntheticPeak, ...],
+    moment_labels: tuple[str, ...],
+) -> dict[str, float]:
+    """Calculate dynamic Gaussian-mixture moments through ParaNMR."""
+    peak_data = gaussian_peak_representation(
+        centers=np.asarray([peak.center_ppm for peak in peaks], dtype=float),
+        fwhm=np.asarray([peak.fwhm_ppm for peak in peaks], dtype=float),
+        areas=np.asarray([peak.area for peak in peaks], dtype=float),
+    )
+    return compute_gaussian_mixture_moments(
+        centers=peak_data["center"],
+        sigmas=peak_data["sigma"],
+        area_norm=peak_data["area_norm"],
+        moment_labels=moment_labels,
+    )
+
+
+def latents_to_target(latents: SampledLatents) -> TensorTarget:
+    """Build a canonical Cartesian χ/R6 target from sampled latents."""
+    tensor = IsoAxRhoEulerFitter.totensor(
+        {
+            "iso": latents.iso,
+            "ax": latents.ax,
+            "rho_over_ax": latents.rho_over_ax,
+            "alpha": latents.alpha,
+            "beta": latents.beta,
+            "gamma": latents.gamma,
+        }
+    )
+    return TensorTarget(
+        chi_xx=float(tensor[0, 0]),
+        chi_xy=float(tensor[0, 1]),
+        chi_xz=float(tensor[0, 2]),
+        chi_yy=float(tensor[1, 1]),
+        chi_yz=float(tensor[1, 2]),
+        chi_zz=float(tensor[2, 2]),
+        linewidth_p1=latents.p1,
+        linewidth_p2=latents.p2,
+    )
 
 
 def prepare_dataset_molecule(config: DatasetGenerationConfig) -> tuple[Molecule, str]:

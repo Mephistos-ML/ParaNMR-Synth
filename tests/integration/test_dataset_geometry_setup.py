@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from paranmr_synth.app.pipelines import prepare_dataset_molecule
-from paranmr_synth.app.pipelines.dataset_generation import simulate_peaks
+from paranmr_synth.app.pipelines import generate_cases, prepare_dataset_molecule
+from paranmr_synth.app.pipelines.dataset_generation import generate_case, simulate_peaks
 from paranmr_synth.cfg import DatasetGenerationConfig
 from paranmr_synth.core.sampling import SampledLatents
 
@@ -55,3 +55,19 @@ def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path:
 
     assert len(peaks) == 2
     assert all(peak.fwhm_ppm > 0.0 for peak in peaks)
+
+    case = generate_case(
+        config=config,
+        molecule=molecule,
+        geometry_checksum=checksum,
+        case_index=0,
+    )
+
+    assert tuple(case.moments) == tuple(f"m{index}" for index in range(1, 11))
+    assert case.target.linewidth_p1 >= 500.0
+    assert case.target.linewidth_p1 <= 2000.0
+
+    batch = generate_cases(config)
+
+    assert len(batch) == 1
+    assert batch[0] == case
