@@ -1,4 +1,4 @@
-# paraNMR-Synth — AI Agent Development Contract
+# ParaNMR-Synth — AI Agent Development Contract
 
 ## 1. Scope and Authority
 
@@ -8,7 +8,7 @@ must not be proposed or applied.
 
 ## 2. Product Boundary
 
-`paraNMR-Synth` is the reproducible synthetic-dataset orchestrator for the
+`ParaNMR-Synth` is the reproducible synthetic-dataset orchestrator for the
 ParaNMR ecosystem. Its production artifact is a provenance-complete dataset,
 not merely a susceptibility-tensor CSV.
 
@@ -20,9 +20,10 @@ ParaNMR is the sole source of truth for scientific pNMR behaviour:
 - Gaussian peak representation and moment descriptors;
 - ParaNMR experiment-file formats.
 
-`paraNMR-Synth` may sample physical latent variables, apply explicitly
-configured measurement noise, assign deterministic dataset splits, and write
-dataset manifests. It must call ParaNMR APIs for every scientific calculation.
+`ParaNMR-Synth` may sample physical latent variables, apply explicitly
+configured measurement noise, and write dataset manifests. Dataset splitting
+is an explicit downstream ML concern, not an implicit generator policy. It
+must call ParaNMR APIs for every scientific calculation.
 
 ## 3. Layers and Allowed Dependencies
 
@@ -34,7 +35,7 @@ CLI -> app -> core
 External dependency direction is:
 
 ```text
-paraNMR-Synth -> ParaNMR
+ParaNMR-Synth -> ParaNMR
 ```
 
 ParaNMR must never import `paranmr_synth`.
@@ -42,12 +43,12 @@ ParaNMR must never import `paranmr_synth`.
 - `cli`: argument parsing and dispatch only.
 - `cfg`: YAML parsing and validation only.
 - `app`: workflow orchestration, dataset assembly, and output coordination.
-- `core`: deterministic sampling, split assignment, and noise transforms.
+- `core`: deterministic sampling and noise transforms.
 - `io`: serialization and deserialization only.
 
 ## 4. Scientific Source-of-Truth Rules
 
-The following are forbidden in `paraNMR-Synth`:
+The following are forbidden in `ParaNMR-Synth`:
 
 - reimplementing χ tensor construction, Euler rotations, PDA, PCS, linewidth,
   Gaussian peak, or moment equations;
@@ -55,7 +56,7 @@ The following are forbidden in `paraNMR-Synth`:
   result when a Python API exists or can be added to ParaNMR;
 - silently approximating missing ParaNMR functionality.
 
-`paraNMR-Synth` must never modify ParaNMR. If an API is unavailable, use a
+`ParaNMR-Synth` must never modify ParaNMR. If an API is unavailable, use a
 supported existing ParaNMR interface or leave the capability out of scope.
 
 ## 5. Dataset Contract
@@ -63,16 +64,16 @@ supported existing ParaNMR interface or leave the capability out of scope.
 Every dataset must have a manifest recording at least:
 
 - dataset schema version;
-- `paraNMR-Synth` and ParaNMR versions;
+- `ParaNMR-Synth` and ParaNMR versions;
 - full normalized YAML configuration;
 - all random seeds;
 - source geometry and input-file checksums;
-- split assignment and sample identifiers;
+- sample identifiers;
 - requested moment labels.
 
 The number of moments is always configuration-driven. Code must accept every
-positive `moments.number_of_moments` value and derive ordered labels through the
-ParaNMR moment-label API. Do not hard-code `m1` through `m6`.
+positive `moments.number_of_moments` value and derive ordered labels from the
+canonical `m1` through `mN` convention. Do not hard-code `m1` through `m6`.
 
 Dataset targets must include the six independent Cartesian χ components.
 Latent iso/ax/rho/Euler values are auxiliary provenance labels, not the sole
@@ -83,8 +84,7 @@ canonical target.
 - Randomness is forbidden unless its seed is explicit in YAML and persisted.
 - Noise is applied to peaks before moments are calculated; never add independent
   noise directly to moments.
-- Dataset split assignment occurs before noise expansion.
-- All temperatures and noisy replicas of one tensor series belong to one split.
+- Dataset splitting is explicit downstream ML policy, not generator behaviour.
 - File ordering, sample identifiers, CSV columns, and floating-point formatting
   must be deterministic.
 
