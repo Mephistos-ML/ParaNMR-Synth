@@ -1,9 +1,10 @@
 from pathlib import Path
 
-from paranmr_synth.app.pipelines import generate_cases, prepare_dataset_molecule
+from paranmr_synth.app.pipelines.dataset_generation import generate_cases, prepare_dataset_molecule
 from paranmr_synth.app.pipelines.dataset_generation import generate_case, simulate_peaks
-from paranmr_synth.cfg import DatasetGenerationConfig
-from paranmr_synth.core.generators import LinewidthLatents, SusceptibilityLatents
+from paranmr_synth.cfg.dataset import DatasetGenerationConfig
+from paranmr_synth.core.generators.linewidth import LinewidthLatents
+from paranmr_synth.core.generators.susceptibility import SusceptibilityLatents
 
 
 def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path: Path):

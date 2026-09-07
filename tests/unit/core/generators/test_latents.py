@@ -1,8 +1,6 @@
-from paranmr_synth.cfg import DatasetGenerationConfig
-from paranmr_synth.core.generators import (
-    generate_linewidth_latents,
-    generate_susceptibility_latents,
-)
+from paranmr_synth.cfg.dataset import DatasetGenerationConfig
+from paranmr_synth.core.generators.linewidth import generate_linewidth_latents
+from paranmr_synth.core.generators.susceptibility import generate_susceptibility_latents
 
 
 def test_latent_sampling_is_stable_per_case_and_parameter():

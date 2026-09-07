@@ -1,6 +1,6 @@
 import pytest
 
-from paranmr_synth.cfg import DatasetGenerationConfig
+from paranmr_synth.cfg.dataset import DatasetGenerationConfig
 
 
 def _config(number_of_moments: int = 10) -> dict:
@@ -27,8 +27,8 @@ def test_dataset_config_builds_dynamic_moment_labels():
     config = DatasetGenerationConfig.from_mapping(_config(number_of_moments=10))
 
     assert config.moment_labels == tuple(f"m{index}" for index in range(1, 11))
-    assert config.linewidth_method == "r6"
-    assert config.susceptibility_model == "isoaxrho_euler"
+    assert config.linewidth.method == "r6"
+    assert config.susceptibility.model == "isoaxrho_euler"
 
 
 def test_dataset_config_requires_number_of_moments():

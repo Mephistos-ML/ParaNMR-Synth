@@ -1,4 +1,4 @@
-from paranmr_synth.core.generators import generate_diamagnetic_shifts
+from paranmr_synth.core.generators.diamagnetic import generate_diamagnetic_shifts
 
 
 def test_diamagnetic_sampling_is_seeded_and_order_independent():
