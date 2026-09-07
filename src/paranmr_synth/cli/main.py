@@ -1,4 +1,4 @@
-"""Command-line entrypoint for pnmr-chi-gen."""
+"""Command-line entrypoint for paraNMR-Synth."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ import argparse
 import logging
 from pathlib import Path
 
-from pnmr_chi_gen.app.pipelines import run_generate
-from pnmr_chi_gen.cfg import GenerateConfig
-from pnmr_chi_gen.cli.set_logging import setup_logging
+from paranmr_synth.app.pipelines import run_generate
+from paranmr_synth.cfg import GenerateConfig
+from paranmr_synth.cli.set_logging import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Build the top-level CLI parser."""
 
     parser = argparse.ArgumentParser(
-        prog="pnmr_chi_gen",
+        prog="paranmr-synth",
         description="Generate paranmr-compatible susceptibility tensor series.",
     )
     subparsers = parser.add_subparsers(dest="command")
@@ -64,7 +64,7 @@ def main() -> int:
     )
 
     if args.version:
-        from pnmr_chi_gen.__version__ import __version__
+        from paranmr_synth.__version__ import __version__
 
         print(__version__)
         return 0

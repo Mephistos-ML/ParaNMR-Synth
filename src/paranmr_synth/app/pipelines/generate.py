@@ -7,11 +7,11 @@ from pathlib import Path
 
 import numpy as np
 
-from pnmr_chi_gen.core.generators import (
+from paranmr_synth.core.generators import (
     SeriesGeneratorSpec,
     generate_tensor_series_batch,
 )
-from pnmr_chi_gen.io import write_paranmr_csv
+from paranmr_synth.io import write_paranmr_csv
 
 logger = logging.getLogger(__name__)
 

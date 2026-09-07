@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from pnmr_chi_gen.core.constraints import (
+from paranmr_synth.core.constraints import (
     validate_euler_zyz_angles_deg,
     validate_positive_temperature_k,
     validate_rho_over_ax,
     validate_strictly_increasing_temperatures,
 )
-from pnmr_chi_gen.core.domain.tensors import SusceptibilityTensor
+from paranmr_synth.core.domain.tensors import SusceptibilityTensor
 
 
 @dataclass(frozen=True, slots=True)

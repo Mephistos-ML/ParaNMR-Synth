@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pnmr_chi_gen.core.constraints import (
+from paranmr_synth.core.constraints import (
     validate_n_series,
     validate_parameter_bounds,
     validate_temperature_grid,

@@ -1,17 +1,17 @@
 import csv
 import sys
 
-from pnmr_chi_gen.app.pipelines import run_generate
-from pnmr_chi_gen.cli.main import main
-from pnmr_chi_gen.core.domain import IsoAxRhoLatents, TensorPoint, TensorSeries
-from pnmr_chi_gen.core.generators import (
+from paranmr_synth.app.pipelines import run_generate
+from paranmr_synth.cli.main import main
+from paranmr_synth.core.domain import IsoAxRhoLatents, TensorPoint, TensorSeries
+from paranmr_synth.core.generators import (
     OrientationSpec,
     ParameterSpec,
     SeriesGeneratorSpec,
     TemperatureGridSpec,
 )
-from pnmr_chi_gen.io import write_paranmr_csv
-from pnmr_chi_gen.core.parameterizations import build_tensor_from_isoaxrho
+from paranmr_synth.io import write_paranmr_csv
+from paranmr_synth.core.parameterizations import build_tensor_from_isoaxrho
 
 
 def test_write_paranmr_csv_exports_expected_columns(tmp_path):
@@ -52,7 +52,7 @@ def test_write_paranmr_csv_exports_expected_columns(tmp_path):
     comment_lines = [line for line in raw_text.splitlines() if line.startswith("#")]
 
     assert len(rows) == 1
-    assert comment_lines[0].startswith("# This file was generated with pnmr-chi-gen v")
+    assert comment_lines[0].startswith("# This file was generated with paraNMR-Synth v")
     assert comment_lines[1] == "# paranmr/simpnmr-compatible susceptibility tensor series"
     assert (
         comment_lines[2]
@@ -151,7 +151,7 @@ def test_cli_run_executes_generation_from_yaml_config(tmp_path, monkeypatch):
         encoding="utf-8",
     )
 
-    monkeypatch.setattr(sys, "argv", ["pnmr_chi_gen", "run", str(config_file)])
+    monkeypatch.setattr(sys, "argv", ["paranmr-synth", "run", str(config_file)])
 
     exit_code = main()
 

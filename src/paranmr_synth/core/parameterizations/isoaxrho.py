@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from pnmr_chi_gen.core.domain.samples import IsoAxRhoLatents
-from pnmr_chi_gen.core.domain.tensors import SusceptibilityTensor
-from pnmr_chi_gen.core.rotations.euler_zyz import build_zyz_rotation_matrix
+from paranmr_synth.core.domain.samples import IsoAxRhoLatents
+from paranmr_synth.core.domain.tensors import SusceptibilityTensor
+from paranmr_synth.core.rotations.euler_zyz import build_zyz_rotation_matrix
 
 
 def build_tensor_from_isoaxrho(latents: IsoAxRhoLatents) -> SusceptibilityTensor:

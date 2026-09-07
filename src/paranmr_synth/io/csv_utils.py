@@ -6,7 +6,7 @@ import csv
 import datetime
 from pathlib import Path
 
-from pnmr_chi_gen.__version__ import __version__
+from paranmr_synth.__version__ import __version__
 
 
 def write_csv_rows_safe(
@@ -24,7 +24,7 @@ def write_csv_rows_safe(
     with path.open("w", newline="", encoding="utf-8-sig") as handle:
         timestamp = datetime.datetime.now().strftime("%H:%M:%S %d-%m-%Y")
         handle.write(
-            f"# This file was generated with pnmr-chi-gen v{__version__} at {timestamp}\n"
+            f"# This file was generated with paraNMR-Synth v{__version__} at {timestamp}\n"
         )
         if comment is not None:
             if isinstance(comment, str):

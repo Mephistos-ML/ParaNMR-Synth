@@ -1,0 +1,1 @@
+"""paraNMR-Synth package."""

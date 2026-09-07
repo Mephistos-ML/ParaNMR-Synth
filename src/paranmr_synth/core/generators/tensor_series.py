@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import numpy as np
 
-from pnmr_chi_gen.core.domain import IsoAxRhoLatents, TensorPoint, TensorSeries
-from pnmr_chi_gen.core.generators.priors import ParameterSpec, SeriesGeneratorSpec
-from pnmr_chi_gen.core.generators.temperature_dependence import (
+from paranmr_synth.core.domain import IsoAxRhoLatents, TensorPoint, TensorSeries
+from paranmr_synth.core.generators.priors import ParameterSpec, SeriesGeneratorSpec
+from paranmr_synth.core.generators.temperature_dependence import (
     apply_curie_like_temperature_dependence,
 )
-from pnmr_chi_gen.core.parameterizations import build_tensor_from_isoaxrho
+from paranmr_synth.core.parameterizations import build_tensor_from_isoaxrho
 
 
 def _sample_parameter(spec: ParameterSpec, rng: np.random.Generator) -> float:

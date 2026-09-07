@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pnmr_chi_gen.core.domain import IsoAxRhoLatents
+from paranmr_synth.core.domain import IsoAxRhoLatents
 
 
 def apply_curie_like_temperature_dependence(

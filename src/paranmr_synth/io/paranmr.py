@@ -7,8 +7,8 @@ from pathlib import Path
 
 import numpy as np
 
-from pnmr_chi_gen.core.domain import TensorSeries
-from pnmr_chi_gen.io.csv_utils import write_csv_rows_safe
+from paranmr_synth.core.domain import TensorSeries
+from paranmr_synth.io.csv_utils import write_csv_rows_safe
 
 logger = logging.getLogger(__name__)
 

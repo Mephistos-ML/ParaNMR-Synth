@@ -8,7 +8,7 @@ from typing import Any
 
 import yaml
 
-from pnmr_chi_gen.core.generators import (
+from paranmr_synth.core.generators import (
     OrientationSpec,
     ParameterSpec,
     SeriesGeneratorSpec,
@@ -18,7 +18,7 @@ from pnmr_chi_gen.core.generators import (
 
 @dataclass(frozen=True, slots=True)
 class GenerateConfig:
-    """YAML-facing configuration object for `pnmr_chi_gen run`."""
+    """YAML-facing configuration object for `paranmr-synth run`."""
 
     n_series: int
     temperature_start: int

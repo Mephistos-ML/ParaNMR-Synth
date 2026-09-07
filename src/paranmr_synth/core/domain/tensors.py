@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from pnmr_chi_gen.core.constraints import as_symmetric_tensor
+from paranmr_synth.core.constraints import as_symmetric_tensor
 
 
 @dataclass(frozen=True, slots=True)

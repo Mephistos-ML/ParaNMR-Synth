@@ -1,6 +1,6 @@
-# pnmr-chi-gen
+# paraNMR-Synth
 
-`pnmr-chi-gen` is a standalone generator of magnetic susceptibility tensor series for paramagnetic NMR simulation workflows and machine-learning datasets.
+`paraNMR-Synth` is a standalone generator of magnetic susceptibility tensor series for paramagnetic NMR simulation workflows and machine-learning datasets.
 
 The package is built to generate physically valid, temperature-dependent susceptibility tensors in a format that can be consumed by `paranmr/simpnmr`. Its immediate value is upstream of simulation: it gives ML workflows a controlled way to sample tensor trajectories with explicit latent parameters, temperature grids, and reproducible seeds.
 
@@ -14,7 +14,7 @@ In paramagnetic NMR, the magnetic susceptibility tensor is a compact physical ob
 - easy to sample reproducibly
 - directly consumable by downstream simulation tools
 
-Instead of starting from broad synthetic artifacts and inferring structure afterward, `pnmr-chi-gen` starts from the tensor itself. That makes dataset generation more controlled, more interpretable, and easier to audit.
+Instead of starting from broad synthetic artifacts and inferring structure afterward, `paraNMR-Synth` starts from the tensor itself. That makes dataset generation more controlled, more interpretable, and easier to audit.
 
 Typical use cases:
 
@@ -86,7 +86,7 @@ orientation:
 Run:
 
 ```bash
-pnmr_chi_gen run examples/run_minimal.yaml
+paranmr-synth run examples/run_minimal.yaml
 ```
 
 This creates:
@@ -160,7 +160,7 @@ These checks live in the core constraint layer rather than being scattered acros
 The package is structured as a layered system:
 
 ```text
-src/pnmr_chi_gen/
+src/paranmr_synth/
   app/    # orchestration
   cfg/    # YAML-facing config loading
   cli/    # command-line entrypoint and logging
@@ -192,10 +192,10 @@ That matters for ML dataset work, where exact regeneration of sampled tensors is
 
 ## Relationship to paranmr/simpnmr
 
-`pnmr-chi-gen` is not meant to replace `paranmr/simpnmr`. It sits upstream of that ecosystem.
+`paraNMR-Synth` is not meant to replace ParaNMR. It sits upstream of that ecosystem.
 
-- `pnmr-chi-gen` generates susceptibility tensor series
-- `paranmr/simpnmr` consumes susceptibility tensors in fitting and simulation workflows
+- `paraNMR-Synth` generates susceptibility tensor series
+- ParaNMR consumes susceptibility tensors in fitting and simulation workflows
 
 That separation is useful. One tool is responsible for controlled data generation; the other is responsible for domain simulation and analysis.
 
@@ -210,7 +210,7 @@ PYTHONPATH=src python3 -m pytest -q
 Run the example:
 
 ```bash
-pnmr_chi_gen run examples/run_minimal.yaml
+paranmr-synth run examples/run_minimal.yaml
 ```
 
 ## Roadmap

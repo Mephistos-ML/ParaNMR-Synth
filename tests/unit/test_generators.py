@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pnmr_chi_gen.core.generators import (
+from paranmr_synth.core.generators import (
     OrientationSpec,
     ParameterSpec,
     SeriesGeneratorSpec,
@@ -10,7 +10,7 @@ from pnmr_chi_gen.core.generators import (
     generate_tensor_series,
     generate_tensor_series_batch,
 )
-from pnmr_chi_gen.core.domain import IsoAxRhoLatents
+from paranmr_synth.core.domain import IsoAxRhoLatents
 
 
 def test_parameter_spec_from_scalar_creates_fixed_spec():

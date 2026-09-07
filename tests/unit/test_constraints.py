@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pnmr_chi_gen.core.constraints import (
+from paranmr_synth.core.constraints import (
     as_symmetric_tensor,
     validate_euler_zyz_angles_deg,
     validate_rho_over_ax,

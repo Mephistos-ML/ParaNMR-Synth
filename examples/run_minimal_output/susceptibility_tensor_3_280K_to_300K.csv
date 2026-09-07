@@ -1,4 +1,4 @@
-﻿# This file was generated with pnmr-chi-gen v0.0.1 at 16:18:58 14-07-2026
+﻿# This file was generated with paraNMR-Synth v0.0.1 at 16:18:58 14-07-2026
 # paranmr/simpnmr-compatible susceptibility tensor series
 # seed=7 | chi_iso=[0.0, 1.0] | chi_ax=[-0.8, 0.8] | rho_over_ax=0.1666666667 | alpha_deg=0.0 | beta_deg=0.0 | gamma_deg=0.0
 Temperature (K),chi_iso (Å^3),chi_ax (Å^3),chi_rho (Å^3),chi_xx (Å^3),chi_xy (Å^3),chi_xz (Å^3),chi_yy (Å^3),chi_yz (Å^3),chi_zz (Å^3),dchi_xx (Å^3),dchi_xy (Å^3),dchi_xz (Å^3),dchi_yy (Å^3),dchi_yz (Å^3),dchi_zz (Å^3),chi_x (Å^3),chi_y (Å^3),chi_z (Å^3),alpha (degrees),beta (degrees),gamma (degrees)

@@ -1,7 +1,7 @@
 import numpy as np
 
-from pnmr_chi_gen.core.domain import IsoAxRhoLatents
-from pnmr_chi_gen.core.parameterizations import build_tensor_from_isoaxrho
+from paranmr_synth.core.domain import IsoAxRhoLatents
+from paranmr_synth.core.parameterizations import build_tensor_from_isoaxrho
 
 
 def test_build_tensor_from_isoaxrho_without_rotation_returns_diagonal_tensor():

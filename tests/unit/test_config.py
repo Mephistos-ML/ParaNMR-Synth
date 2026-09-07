@@ -1,4 +1,4 @@
-from pnmr_chi_gen.cfg import GenerateConfig
+from paranmr_synth.cfg import GenerateConfig
 
 
 def test_generate_config_from_file_builds_series_generator_spec(tmp_path):
