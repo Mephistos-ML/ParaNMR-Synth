@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -10,10 +11,32 @@ from paranmr.app.loaders.paramag_centre_load import load_paramagnetic_centre
 from paranmr.core.build.elstate import build_electronic_state
 from paranmr.core.build.hfc import build_hfc_from_pdip
 from paranmr.core.domain.mol import Molecule
+from paranmr.app.policies.averaging import resolve_average_shift_groups
+from paranmr.app.policies.linewidth_r6 import resolve_r6_linewidth_inputs
+from paranmr.core.fitting.susceptibility.linewidths import predict_r6_widths_by_atom_label
+from paranmr.core.fitting.susceptibility.moments.forward import (
+    calculated_signal_packages_from_parameters,
+    package_linewidths,
+    sort_packages_by_center,
+)
+from paranmr.core.fitting.susceptibility.models.isoaxrho_euler import (
+    IsoAxRhoEulerFitter,
+)
 from paranmr.tools.coords.xyz_fmt import add_label_indices, load_xyz
 
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
 from paranmr_synth.core.sampling import sample_diamagnetic_shifts
+from paranmr_synth.core.sampling.latents import SampledLatents
+
+
+@dataclass(frozen=True, slots=True)
+class SyntheticPeak:
+    """One synthetic Gaussian peak before moment calculation."""
+
+    label: str
+    center_ppm: float
+    fwhm_ppm: float
+    area: float
 
 
 def prepare_dataset_molecule(config: DatasetGenerationConfig) -> tuple[Molecule, str]:
@@ -55,3 +78,54 @@ def geometry_checksum(*, labels: tuple[str, ...], coordinates: np.ndarray) -> st
         for label, (x, y, z) in zip(labels, coordinate_array)
     )
     return hashlib.sha256("\n".join(records).encode("utf-8")).hexdigest()
+
+
+def simulate_peaks(
+    *,
+    molecule: Molecule,
+    latents: SampledLatents,
+) -> tuple[SyntheticPeak, ...]:
+    """Calculate methyl-aware PCS/R6 Gaussian peak descriptors via ParaNMR."""
+    parameters = {
+        "iso": latents.iso,
+        "ax": latents.ax,
+        "rho_over_ax": latents.rho_over_ax,
+        "alpha": latents.alpha,
+        "beta": latents.beta,
+        "gamma": latents.gamma,
+    }
+    average_labels = tuple(
+        tuple(group)
+        for group in resolve_average_shift_groups(
+            molecule=molecule,
+            average_shifts="methyls",
+        )
+    )
+    packages = sort_packages_by_center(
+        calculated_signal_packages_from_parameters(
+            model=IsoAxRhoEulerFitter,
+            parameters=parameters,
+            nuclei=molecule.nuclei,
+            include_diamagnetic=True,
+            average_labels=average_labels,
+        )
+    )
+    linewidth_inputs = resolve_r6_linewidth_inputs(
+        molecule=molecule,
+        isotope_filter=molecule.nuclei[0].isotope,
+        label_kind="atom_label",
+    )
+    widths = predict_r6_widths_by_atom_label(
+        linewidth_inputs=linewidth_inputs,
+        linewidth_vars_by_name={"p1": latents.p1, "p2": latents.p2},
+    )
+    fwhm_ppm = package_linewidths(packages, widths)
+    return tuple(
+        SyntheticPeak(
+            label=package.label,
+            center_ppm=package.center,
+            fwhm_ppm=float(width),
+            area=float(len(package.atom_labels)),
+        )
+        for package, width in zip(packages, fwhm_ppm)
+    )

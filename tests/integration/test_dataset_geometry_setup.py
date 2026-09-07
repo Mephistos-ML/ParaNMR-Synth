@@ -1,7 +1,9 @@
 from pathlib import Path
 
 from paranmr_synth.app.pipelines import prepare_dataset_molecule
+from paranmr_synth.app.pipelines.dataset_generation import simulate_peaks
 from paranmr_synth.cfg import DatasetGenerationConfig
+from paranmr_synth.core.sampling import SampledLatents
 
 
 def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path: Path):
@@ -36,3 +38,20 @@ def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path:
     assert [nucleus.label for nucleus in molecule.nuclei] == ["H1", "H2"]
     assert all(nucleus.A.tensor_full is not None for nucleus in molecule.nuclei)
     assert all(0.0 <= nucleus.shift.dia <= 10.0 for nucleus in molecule.nuclei)
+
+    peaks = simulate_peaks(
+        molecule=molecule,
+        latents=SampledLatents(
+            iso=0.0,
+            ax=0.02,
+            rho_over_ax=0.1,
+            alpha=0.0,
+            beta=0.0,
+            gamma=0.0,
+            p1=705.05,
+            p2=0.25,
+        ),
+    )
+
+    assert len(peaks) == 2
+    assert all(peak.fwhm_ppm > 0.0 for peak in peaks)
