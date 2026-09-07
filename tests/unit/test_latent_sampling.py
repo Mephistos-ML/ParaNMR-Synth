@@ -1,5 +1,8 @@
 from paranmr_synth.cfg import DatasetGenerationConfig
-from paranmr_synth.core.sampling import sample_latents
+from paranmr_synth.core.generators import (
+    generate_linewidth_latents,
+    generate_susceptibility_latents,
+)
 
 
 def test_latent_sampling_is_stable_per_case_and_parameter():
@@ -14,11 +17,12 @@ def test_latent_sampling_is_stable_per_case_and_parameter():
         "susceptibility": {"model": "isoaxrho_euler", "variables": {"iso": [0, 0.02], "ax": [-0.08, 0.08], "rho_over_ax": [0, 1 / 3], "alpha": [0, 360], "beta": [0, 180], "gamma": [0, 360]}},
     }
     config = DatasetGenerationConfig.from_mapping(raw)
-    first = sample_latents(config=config, geometry_checksum="abc", case_index=0)
-    repeated = sample_latents(config=config, geometry_checksum="abc", case_index=0)
-    second = sample_latents(config=config, geometry_checksum="abc", case_index=1)
+    first = generate_susceptibility_latents(config=config, geometry_checksum="abc", case_index=0)
+    repeated = generate_susceptibility_latents(config=config, geometry_checksum="abc", case_index=0)
+    second = generate_susceptibility_latents(config=config, geometry_checksum="abc", case_index=1)
+    linewidth = generate_linewidth_latents(config=config, geometry_checksum="abc", case_index=0)
 
     assert first == repeated
     assert first != second
     assert 0.0 <= first.rho_over_ax <= 1.0 / 3.0
-    assert 500.0 <= first.p1 <= 2000.0
+    assert 500.0 <= linewidth.p1 <= 2000.0

@@ -31,10 +31,14 @@ from paranmr.core.fitting.susceptibility.moments.gaussian import (
 from paranmr.tools.coords.xyz_fmt import add_label_indices, load_xyz
 
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
-from paranmr_synth.core.sampling import sample_diamagnetic_shifts
-from paranmr_synth.core.sampling.latents import SampledLatents
+from paranmr_synth.core.generators import (
+    LinewidthLatents,
+    SusceptibilityLatents,
+    generate_diamagnetic_shifts,
+    generate_linewidth_latents,
+    generate_susceptibility_latents,
+)
 from paranmr_synth.core.dataset import DatasetRecord, TensorTarget
-from paranmr_synth.core.sampling import sample_latents
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,12 +59,21 @@ def generate_case(
     case_index: int,
 ) -> DatasetRecord:
     """Generate one complete in-memory synthetic moment-matching case."""
-    latents = sample_latents(
+    susceptibility = generate_susceptibility_latents(
         config=config,
         geometry_checksum=geometry_checksum,
         case_index=case_index,
     )
-    peaks = simulate_peaks(molecule=molecule, latents=latents)
+    linewidth = generate_linewidth_latents(
+        config=config,
+        geometry_checksum=geometry_checksum,
+        case_index=case_index,
+    )
+    peaks = simulate_peaks(
+        molecule=molecule,
+        susceptibility=susceptibility,
+        linewidth=linewidth,
+    )
     moments = peaks_to_moments(peaks=peaks, moment_labels=config.moment_labels)
     return DatasetRecord(
         sample_id=f"{config.project_name}-{geometry_checksum[:12]}-{case_index:06d}",
@@ -69,7 +82,7 @@ def generate_case(
         temperature_k=config.temperature_k,
         magnetic_field_t=config.magnetic_field_t,
         moments=moments,
-        target=latents_to_target(latents),
+        target=latents_to_target(susceptibility=susceptibility, linewidth=linewidth),
     )
 
 
@@ -104,16 +117,18 @@ def peaks_to_moments(
     )
 
 
-def latents_to_target(latents: SampledLatents) -> TensorTarget:
+def latents_to_target(
+    *, susceptibility: SusceptibilityLatents, linewidth: LinewidthLatents
+) -> TensorTarget:
     """Build a canonical Cartesian χ/R6 target from sampled latents."""
     tensor = IsoAxRhoEulerFitter.totensor(
         {
-            "iso": latents.iso,
-            "ax": latents.ax,
-            "rho_over_ax": latents.rho_over_ax,
-            "alpha": latents.alpha,
-            "beta": latents.beta,
-            "gamma": latents.gamma,
+            "iso": susceptibility.iso,
+            "ax": susceptibility.ax,
+            "rho_over_ax": susceptibility.rho_over_ax,
+            "alpha": susceptibility.alpha,
+            "beta": susceptibility.beta,
+            "gamma": susceptibility.gamma,
         }
     )
     return TensorTarget(
@@ -123,8 +138,8 @@ def latents_to_target(latents: SampledLatents) -> TensorTarget:
         chi_yy=float(tensor[1, 1]),
         chi_yz=float(tensor[1, 2]),
         chi_zz=float(tensor[2, 2]),
-        linewidth_p1=latents.p1,
-        linewidth_p2=latents.p2,
+        linewidth_p1=linewidth.p1,
+        linewidth_p2=linewidth.p2,
     )
 
 
@@ -145,7 +160,7 @@ def prepare_dataset_molecule(config: DatasetGenerationConfig) -> tuple[Molecule,
     )
     build_hfc_from_pdip(molecule)
     checksum = geometry_checksum(labels=tuple(molecule.labels), coordinates=molecule.coords)
-    dia_shifts = sample_diamagnetic_shifts(
+    dia_shifts = generate_diamagnetic_shifts(
         atom_labels=tuple(nucleus.label for nucleus in molecule.nuclei),
         geometry_checksum=checksum,
         seed=config.seed,
@@ -172,16 +187,17 @@ def geometry_checksum(*, labels: tuple[str, ...], coordinates: np.ndarray) -> st
 def simulate_peaks(
     *,
     molecule: Molecule,
-    latents: SampledLatents,
+    susceptibility: SusceptibilityLatents,
+    linewidth: LinewidthLatents,
 ) -> tuple[SyntheticPeak, ...]:
     """Calculate methyl-aware PCS/R6 Gaussian peak descriptors via ParaNMR."""
     parameters = {
-        "iso": latents.iso,
-        "ax": latents.ax,
-        "rho_over_ax": latents.rho_over_ax,
-        "alpha": latents.alpha,
-        "beta": latents.beta,
-        "gamma": latents.gamma,
+        "iso": susceptibility.iso,
+        "ax": susceptibility.ax,
+        "rho_over_ax": susceptibility.rho_over_ax,
+        "alpha": susceptibility.alpha,
+        "beta": susceptibility.beta,
+        "gamma": susceptibility.gamma,
     }
     average_labels = tuple(
         tuple(group)
@@ -206,7 +222,7 @@ def simulate_peaks(
     )
     widths = predict_r6_widths_by_atom_label(
         linewidth_inputs=linewidth_inputs,
-        linewidth_vars_by_name={"p1": latents.p1, "p2": latents.p2},
+        linewidth_vars_by_name={"p1": linewidth.p1, "p2": linewidth.p2},
     )
     fwhm_ppm = package_linewidths(packages, widths)
     return tuple(
