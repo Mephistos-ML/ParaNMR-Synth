@@ -62,7 +62,6 @@ susceptibility:
   model: isoaxrho_euler
   input_units: A3  # A3 | cm3 mol-1 | reduced
   variables:
-    iso: [0.0, 0.02]
     ax: [-0.08, 0.08]
     rho_over_ax: [0.0, 0.3333333333]
     alpha: [0.0, 360.0]
@@ -70,7 +69,8 @@ susceptibility:
     gamma: [0.0, 360.0]
 ```
 
-`input_units` applies to the `iso` and `ax` bounds and to exported χ targets.
+`chi_iso` is calculated through ParaNMR's spin-only Curie-law implementation.
+`input_units` applies to the `ax` bounds and to exported χ targets.
 ParaNMR-Synth converts values through ParaNMR's policy API before forward
 calculation; `rho_over_ax` and Euler angles are unit-independent.
 

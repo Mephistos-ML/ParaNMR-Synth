@@ -48,7 +48,6 @@ class LinewidthConfig:
 class SusceptibilityConfig:
     model: str
     input_units: str
-    iso: ParameterSpec
     ax: ParameterSpec
     rho_over_ax: ParameterSpec
     alpha: ParameterSpec

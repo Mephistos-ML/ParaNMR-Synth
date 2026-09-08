@@ -20,8 +20,8 @@ def write_susceptibility(
 ) -> None:
     """Write Cartesian χ and its sampled parameterization."""
     from paranmr.app.policies.susc import resolve_susc_fit_variables
-    _, fixed = resolve_susc_fit_variables(raw_variables={"iso": ["fix", 1.0]}, input_units=config.susceptibility.input_units, temperature=config.experiment.temperature_k, spin=config.hyperfine.spin)
-    scale = fixed["iso"]
+    _, fixed = resolve_susc_fit_variables(raw_variables={"ax": ["fix", 1.0]}, input_units=config.susceptibility.input_units, temperature=config.experiment.temperature_k, spin=config.hyperfine.spin)
+    scale = fixed["ax"]
     row = {
         **{key: value / scale for key, value in target.as_row().items() if key.startswith("chi_")},
         "iso": latent.iso / scale,

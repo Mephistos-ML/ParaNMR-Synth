@@ -112,7 +112,7 @@ class DatasetGenerationConfig:
             experiment=ExperimentConfig(float(experiment["temperature_k"]), float(experiment["magnetic_field_t"])),
             number_of_moments=number_of_moments,
             linewidth=LinewidthConfig(linewidth_method, ParameterSpec.from_raw(linewidth_variables["p1"]), ParameterSpec.from_raw(linewidth_variables["p2"])),
-            susceptibility=SusceptibilityConfig(model, input_units, ParameterSpec.from_raw(susceptibility_variables["iso"]), ParameterSpec.from_raw(susceptibility_variables["ax"]), rho_over_ax, ParameterSpec.from_raw(susceptibility_variables["alpha"]), ParameterSpec.from_raw(susceptibility_variables["beta"]), ParameterSpec.from_raw(susceptibility_variables["gamma"])),
+            susceptibility=SusceptibilityConfig(model, input_units, ParameterSpec.from_raw(susceptibility_variables["ax"]), rho_over_ax, ParameterSpec.from_raw(susceptibility_variables["alpha"]), ParameterSpec.from_raw(susceptibility_variables["beta"]), ParameterSpec.from_raw(susceptibility_variables["gamma"])),
         )
 
     @property

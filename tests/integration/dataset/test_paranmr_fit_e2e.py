@@ -50,7 +50,7 @@ def test_controlled_synthetic_case_recovers_chi_and_linewidth(tmp_path: Path):
             "susceptibility": {
                 "model": "isoaxrho_euler",
                 "variables": {
-                    "iso": [0, 0], "ax": [0.01, 0.01],
+                    "ax": [0.01, 0.01],
                     "rho_over_ax": [0.1, 0.1], "alpha": [0, 0],
                     "beta": [0, 0], "gamma": [0, 0],
                 },
@@ -97,7 +97,7 @@ def _fix_control_nuisance_variables(config_file: Path) -> None:
     """Make a deliberately identifiable one-parameter recovery control."""
     payload = yaml.safe_load(config_file.read_text(encoding="utf-8"))
     variables = payload["susc_fit"]["variables"]
-    for name in ("iso", "rho_over_ax", "alpha", "beta", "gamma"):
+    for name in ("rho_over_ax", "alpha", "beta", "gamma"):
         variables[name][0] = "fix"
     config_file.write_text(
         yaml.safe_dump(payload, sort_keys=False), encoding="utf-8"

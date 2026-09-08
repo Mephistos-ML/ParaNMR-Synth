@@ -27,7 +27,7 @@ def test_generate_dataset_writes_replayable_cases_and_paired_ml_table(tmp_path: 
             "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
             "moments": {"number_of_moments": 3},
             "linewidth": {"method": "r6", "variables": {"p1": [500, 2000], "p2": [0, 1]}},
-            "susceptibility": {"model": "isoaxrho_euler", "variables": {"iso": [0, .02], "ax": [-.08, .08], "rho_over_ax": [0, 1 / 3], "alpha": [0, 360], "beta": [0, 180], "gamma": [0, 360]}},
+            "susceptibility": {"model": "isoaxrho_euler", "variables": {"ax": [-.08, .08], "rho_over_ax": [0, 1 / 3], "alpha": [0, 360], "beta": [0, 180], "gamma": [0, 360]}},
         }
     )
 
@@ -79,7 +79,7 @@ def test_fixed_profile_exports_paranmr_r6_linewidth_estimation(tmp_path: Path):
             "nuclei": {"include": "H"}, "diamagnetic": {"range_min_ppm": 0, "range_max_ppm": 10},
             "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7}, "moments": {"number_of_moments": 3},
             "linewidth": {"method": "r6", "variables": {"p1": [705.05, 705.05], "p2": [0.25, 0.25]}},
-            "susceptibility": {"model": "isoaxrho_euler", "variables": {"iso": [0, .02], "ax": [-.08, .08], "rho_over_ax": [0, 1 / 3], "alpha": [0, 360], "beta": [0, 180], "gamma": [0, 360]}},
+            "susceptibility": {"model": "isoaxrho_euler", "variables": {"ax": [-.08, .08], "rho_over_ax": [0, 1 / 3], "alpha": [0, 360], "beta": [0, 180], "gamma": [0, 360]}},
         }
     )
 

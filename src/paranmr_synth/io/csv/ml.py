@@ -26,8 +26,8 @@ def write_ml_dataset(*, cases: tuple[GeneratedCase, ...], config: DatasetGenerat
 
 def _scale_to_a3(config: DatasetGenerationConfig) -> float:
     from paranmr.app.policies.susc import resolve_susc_fit_variables
-    _, fixed = resolve_susc_fit_variables(raw_variables={"iso": ["fix", 1.0]}, input_units=config.susceptibility.input_units, temperature=config.experiment.temperature_k, spin=config.hyperfine.spin)
-    return fixed["iso"]
+    _, fixed = resolve_susc_fit_variables(raw_variables={"ax": ["fix", 1.0]}, input_units=config.susceptibility.input_units, temperature=config.experiment.temperature_k, spin=config.hyperfine.spin)
+    return fixed["ax"]
 
 
 def _scaled_target(target: dict[str, float], scale: float) -> dict[str, float]:
