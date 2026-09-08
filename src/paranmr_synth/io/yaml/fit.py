@@ -22,7 +22,10 @@ def write_fit_config(*, config: DatasetGenerationConfig, output_file: Path) -> N
             "total_momentum_J": config.hyperfine.total_momentum_j,
         },
         "nuclei": {"include": config.nuclei_include},
-        "diamagnetic": {"method": "csv", "file": "diamagnetic.csv"},
+        "diamagnetic": {
+            "method": config.diamagnetic.method,
+            "file": _replay_input_name("diamagnetic_input", config.diamagnetic.file),
+        },
         "experiment": {"files": "generated_shifts.csv"},
         "assignment": {"method": "fixed"},
         "linewidth": {"method": "experimental", "estimate": "p1_p2"},
@@ -34,6 +37,18 @@ def write_fit_config(*, config: DatasetGenerationConfig, output_file: Path) -> N
             },
         },
     }
+    if config.diamagnetic.reference_file:
+        payload["diamagnetic_ref"] = {
+            "method": config.diamagnetic.reference_method,
+            "file": _replay_input_name(
+                "diamagnetic_reference_input", config.diamagnetic.reference_file
+            ),
+        }
     output_file.parent.mkdir(parents=True, exist_ok=True)
     with output_file.open("w", encoding="utf-8") as handle:
         yaml.safe_dump(payload, handle, sort_keys=False)
+
+
+def _replay_input_name(prefix: str, source_file: str) -> str:
+    """Return the replay filename used by the paired dataset exporter."""
+    return prefix + Path(source_file).suffix

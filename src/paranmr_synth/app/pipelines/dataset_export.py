@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 
 from paranmr_synth.app.pipelines.dataset_generation import (
     GeneratedCase,
@@ -10,7 +11,6 @@ from paranmr_synth.app.pipelines.dataset_generation import (
     prepare_dataset_molecule,
 )
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
-from paranmr_synth.io.csv.diamagnetic import write_diamagnetic
 from paranmr_synth.io.csv.experiment import write_experiment
 from paranmr_synth.io.csv.linewidth import write_linewidth
 from paranmr_synth.io.csv.ml import write_ml_dataset
@@ -55,7 +55,7 @@ def _write_case(*, config: DatasetGenerationConfig, case: GeneratedCase, root: P
     write_indexed_geometry(input_file=config.hyperfine.file, output_file=fit_dir / "geometry.xyz")
     write_fit_config(config=config, output_file=fit_dir / "config.yml")
     write_experiment(config=config, case=case, output_file=fit_dir / "generated_shifts.csv")
-    write_diamagnetic(shifts=case.diamagnetic_shifts, output_file=fit_dir / "diamagnetic.csv")
+    _copy_diamagnetic_inputs(config=config, output_directory=fit_dir)
     write_susceptibility(
         target=case.record.target,
         latent=case.susceptibility,
@@ -63,3 +63,23 @@ def _write_case(*, config: DatasetGenerationConfig, case: GeneratedCase, root: P
         output_file=truth_dir / "susceptibility.csv",
     )
     write_linewidth(latent=case.linewidth, output_file=truth_dir / "linewidth.csv")
+
+
+def _copy_diamagnetic_inputs(
+    *, config: DatasetGenerationConfig, output_directory: Path
+) -> None:
+    """Copy source diamagnetic inputs for self-contained ParaNMR replay."""
+    dia_name = _replay_input_name("diamagnetic_input", config.diamagnetic.file)
+    shutil.copy2(config.diamagnetic.file, output_directory / dia_name)
+    if config.diamagnetic.reference_file:
+        shutil.copy2(
+            config.diamagnetic.reference_file,
+            output_directory / _replay_input_name(
+                "diamagnetic_reference_input", config.diamagnetic.reference_file
+            ),
+        )
+
+
+def _replay_input_name(prefix: str, source_file: str) -> str:
+    """Return a stable replay filename retaining the source suffix."""
+    return prefix + Path(source_file).suffix

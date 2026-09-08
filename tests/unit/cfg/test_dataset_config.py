@@ -15,7 +15,7 @@ def _config(number_of_moments: int = 10) -> dict:
             "total_momentum_J": 3.5,
         },
         "nuclei": {"include": "H"},
-        "diamagnetic": {"range_min_ppm": 0.0, "range_max_ppm": 10.0},
+        "diamagnetic": {"method": "csv", "file": "dia.csv"},
         "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
         "moments": {"number_of_moments": number_of_moments},
         "linewidth": {"method": "r6", "variables": {"p1": [500.0, 2000.0], "p2": [0.0, 1.0]}},
@@ -39,9 +39,9 @@ def test_dataset_config_requires_number_of_moments():
         DatasetGenerationConfig.from_mapping(raw)
 
 
-def test_dataset_config_rejects_invalid_diamagnetic_range():
+def test_dataset_config_requires_dft_reference_input():
     raw = _config()
-    raw["diamagnetic"] = {"range_min_ppm": 10.0, "range_max_ppm": 0.0}
+    raw["diamagnetic"] = {"method": "dft", "file": "dia.out"}
 
-    with pytest.raises(ValueError, match="must not exceed"):
+    with pytest.raises(ValueError, match="requires"):
         DatasetGenerationConfig.from_mapping(raw)

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from paranmr.app.loaders.paramag_centre_load import load_paramagnetic_centre
+from paranmr.app.loaders.dia_load import load_diamagnetic_shifts
 from paranmr.core.build.elstate import build_electronic_state
 from paranmr.core.build.hfc import build_hfc_from_pdip
 from paranmr.core.domain.mol import Molecule
@@ -31,7 +32,6 @@ from paranmr.tools.coords.xyz_fmt import add_label_indices, load_xyz
 
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
 from paranmr_synth.core.dataset.records import DatasetRecord, TensorTarget
-from paranmr_synth.core.generators.diamagnetic import generate_diamagnetic_shifts
 from paranmr_synth.core.generators.linewidth import LinewidthLatents, generate_linewidth_latents
 from paranmr_synth.core.generators.susceptibility import SusceptibilityLatents, generate_susceptibility_latents
 
@@ -54,7 +54,6 @@ class GeneratedCase:
     susceptibility: SusceptibilityLatents
     linewidth: LinewidthLatents
     peaks: tuple[SyntheticPeak, ...]
-    diamagnetic_shifts: dict[str, float]
 
 
 def generate_case(
@@ -109,7 +108,6 @@ def generate_case_artifacts(
         susceptibility=susceptibility,
         linewidth=linewidth,
         peaks=peaks,
-        diamagnetic_shifts={nucleus.label: nucleus.shift.dia for nucleus in molecule.nuclei},
     )
 
 
@@ -187,15 +185,17 @@ def prepare_dataset_molecule(config: DatasetGenerationConfig) -> tuple[Molecule,
     )
     build_hfc_from_pdip(molecule)
     checksum = geometry_checksum(labels=tuple(molecule.labels), coordinates=molecule.coords)
-    dia_shifts = generate_diamagnetic_shifts(
-        atom_labels=tuple(nucleus.label for nucleus in molecule.nuclei),
-        geometry_checksum=checksum,
-        seed=config.project.seed,
-        range_min_ppm=config.diamagnetic.range_min_ppm,
-        range_max_ppm=config.diamagnetic.range_max_ppm,
+    dia_by_key, key_kind, ref_avg_by_label_nn = load_diamagnetic_shifts(
+        file_name=config.diamagnetic.file,
+        file_type=config.diamagnetic.method,
+        ref_file_name=config.diamagnetic.reference_file,
+        ref_file_type=config.diamagnetic.reference_method,
     )
-    for nucleus in molecule.nuclei:
-        nucleus.shift.dia = dia_shifts[nucleus.label]
+    molecule.apply_diamagnetic_shifts(
+        dia_by_key=dia_by_key,
+        key_kind=key_kind,
+        ref_avg_by_label_nn=ref_avg_by_label_nn,
+    )
     return molecule, checksum
 
 

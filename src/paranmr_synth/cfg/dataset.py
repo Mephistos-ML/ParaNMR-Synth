@@ -41,6 +41,12 @@ class DatasetGenerationConfig:
         hyperfine_file = Path(str(hyperfine["file"]))
         if not hyperfine_file.is_absolute():
             hyperfine["file"] = str(path.parent / hyperfine_file)
+        for section in ("diamagnetic", "diamagnetic_ref"):
+            value = raw.get(section)
+            if isinstance(value, dict) and "file" in value:
+                file_name = Path(str(value["file"]))
+                if not file_name.is_absolute():
+                    value["file"] = str(path.parent / file_name)
         return cls.from_mapping(raw)
 
     @classmethod
@@ -72,10 +78,26 @@ class DatasetGenerationConfig:
         centre = tuple(float(value) for value in hyperfine["paramagnetic_centre"])
         if len(centre) != 3:
             raise ValueError("hyperfine.paramagnetic_centre must have three values")
-        minimum = float(diamagnetic["range_min_ppm"])
-        maximum = float(diamagnetic["range_max_ppm"])
-        if minimum > maximum:
-            raise ValueError("diamagnetic range_min_ppm must not exceed range_max_ppm")
+        diamagnetic_method = str(diamagnetic["method"]).lower()
+        if diamagnetic_method not in {"csv", "dft"}:
+            raise ValueError("diamagnetic.method must be 'csv' or 'dft'")
+        diamagnetic_file = _nonempty(diamagnetic["file"], "diamagnetic.file")
+        diamagnetic_ref = raw.get("diamagnetic_ref", {})
+        if not isinstance(diamagnetic_ref, dict):
+            raise ValueError("diamagnetic_ref must be a mapping")
+        reference_method = str(diamagnetic_ref.get("method", "")).lower()
+        reference_file = str(diamagnetic_ref.get("file", ""))
+        if diamagnetic_method == "dft":
+            if reference_method != "dft" or not reference_file.strip():
+                raise ValueError(
+                    "diamagnetic.method 'dft' requires "
+                    "diamagnetic_ref.method 'dft' and diamagnetic_ref.file"
+                )
+        elif reference_method or reference_file.strip():
+            if reference_method not in {"csv", "dft"} or not reference_file.strip():
+                raise ValueError(
+                    "diamagnetic_ref requires both a 'csv' or 'dft' method and file"
+                )
         n_cases = int(project["n_cases"])
         number_of_moments = int(moments["number_of_moments"])
         if n_cases <= 0 or number_of_moments <= 0:
@@ -84,7 +106,9 @@ class DatasetGenerationConfig:
             project=ProjectConfig(_nonempty(project["name"], "project.name"), n_cases, int(project["seed"])),
             hyperfine=HyperfineConfig(_nonempty(hyperfine["file"], "hyperfine.file"), centre, float(hyperfine["spin"]), float(hyperfine["orbit"]), float(hyperfine["total_momentum_J"])),
             nuclei_include=_nonempty(nuclei["include"], "nuclei.include"),
-            diamagnetic=DiamagneticConfig(minimum, maximum),
+            diamagnetic=DiamagneticConfig(
+                diamagnetic_method, diamagnetic_file, reference_method, reference_file
+            ),
             experiment=ExperimentConfig(float(experiment["temperature_k"]), float(experiment["magnetic_field_t"])),
             number_of_moments=number_of_moments,
             linewidth=LinewidthConfig(linewidth_method, ParameterSpec.from_raw(linewidth_variables["p1"]), ParameterSpec.from_raw(linewidth_variables["p2"])),

@@ -31,8 +31,10 @@ class ExperimentConfig:
 
 @dataclass(frozen=True, slots=True)
 class DiamagneticConfig:
-    range_min_ppm: float
-    range_max_ppm: float
+    method: str
+    file: str
+    reference_method: str = ""
+    reference_file: str = ""
 
 
 @dataclass(frozen=True, slots=True)
