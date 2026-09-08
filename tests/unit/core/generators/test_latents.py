@@ -1,5 +1,4 @@
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
-from paranmr_synth.core.generators.linewidth import generate_linewidth_latents
 from paranmr_synth.core.generators.susceptibility import generate_susceptibility_latents
 from paranmr.core.phys.susc import get_spin_only_susc
 
@@ -12,14 +11,13 @@ def test_latent_sampling_is_stable_per_case_and_parameter():
         "diamagnetic": {"method": "csv", "file": "dia.csv"},
         "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
         "moments": {"number_of_moments": 10},
-        "linewidth": {"method": "r6", "variables": {"p1": [500, 2000], "p2": [0, 1]}},
+        "linewidth": {"method": "r6"},
         "susceptibility": {"model": "isoaxrho_euler"},
     }
     config = DatasetGenerationConfig.from_mapping(raw)
     first = generate_susceptibility_latents(config=config, geometry_checksum="abc", case_index=0)
     repeated = generate_susceptibility_latents(config=config, geometry_checksum="abc", case_index=0)
     second = generate_susceptibility_latents(config=config, geometry_checksum="abc", case_index=1)
-    linewidth = generate_linewidth_latents(config=config, geometry_checksum="abc", case_index=0)
 
     assert first == repeated
     assert first != second
@@ -36,4 +34,3 @@ def test_latent_sampling_is_stable_per_case_and_parameter():
     )
     assert min(principal_components) >= 0.0
     assert 0.0 <= first.rho_over_ax <= 1.0 / 3.0
-    assert 500.0 <= linewidth.p1 <= 2000.0

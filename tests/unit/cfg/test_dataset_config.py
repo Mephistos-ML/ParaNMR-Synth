@@ -18,7 +18,7 @@ def _config(number_of_moments: int = 10) -> dict:
         "diamagnetic": {"method": "csv", "file": "dia.csv"},
         "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
         "moments": {"number_of_moments": number_of_moments},
-        "linewidth": {"method": "r6", "variables": {"p1": [500.0, 2000.0], "p2": [0.0, 1.0]}},
+        "linewidth": {"method": "r6"},
         "susceptibility": {"model": "isoaxrho_euler"},
     }
 

@@ -14,6 +14,8 @@ def test_generate_dataset_writes_replayable_cases_and_paired_ml_table(tmp_path: 
         "3\nsynthetic Yb model\nYb 0 0 0\nH 1 0 0\nH 0 1 0\n",
         encoding="utf-8",
     )
+    diamagnetic = tmp_path / "diamagnetic.csv"
+    diamagnetic.write_text("signal_label,shift\nH1,1.0\nH2,2.0\n", encoding="utf-8")
     config = DatasetGenerationConfig.from_mapping(
         {
             "project": {"name": "yb", "n_cases": 2, "seed": 42},
@@ -23,10 +25,10 @@ def test_generate_dataset_writes_replayable_cases_and_paired_ml_table(tmp_path: 
                 "orbit": 3, "total_momentum_J": 3.5,
             },
             "nuclei": {"include": "H"},
-            "diamagnetic": {"range_min_ppm": 0, "range_max_ppm": 10},
+            "diamagnetic": {"method": "csv", "file": str(diamagnetic)},
             "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
             "moments": {"number_of_moments": 3},
-            "linewidth": {"method": "r6", "variables": {"p1": [500, 2000], "p2": [0, 1]}},
+            "linewidth": {"method": "r6"},
             "susceptibility": {"model": "isoaxrho_euler"},
         }
     )
@@ -45,13 +47,12 @@ def test_generate_dataset_writes_replayable_cases_and_paired_ml_table(tmp_path: 
     assert fit_config.is_file()
     assert (case_root / "fit" / "geometry.xyz").is_file()
     assert (case_root / "fit" / "generated_shifts.csv").is_file()
-    assert (case_root / "fit" / "diamagnetic.csv").is_file()
+    assert (case_root / "fit" / "diamagnetic_input.csv").is_file()
     assert (case_root / "synthetic_output" / "susceptibility.csv").is_file()
     assert (case_root / "synthetic_output" / "linewidth.csv").is_file()
     csv_artifacts = [
         root / "dataset.csv",
         case_root / "fit" / "generated_shifts.csv",
-        case_root / "fit" / "diamagnetic.csv",
         case_root / "synthetic_output" / "susceptibility.csv",
         case_root / "synthetic_output" / "linewidth.csv",
     ]
@@ -72,13 +73,15 @@ def test_fixed_profile_exports_paranmr_r6_linewidth_estimation(tmp_path: Path):
         "3\nsynthetic Yb model\nYb 0 0 0\nH 1 0 0\nH 0 1 0\n",
         encoding="utf-8",
     )
+    diamagnetic = tmp_path / "diamagnetic.csv"
+    diamagnetic.write_text("signal_label,shift\nH1,1.0\nH2,2.0\n", encoding="utf-8")
     config = DatasetGenerationConfig.from_mapping(
         {
             "project": {"name": "yb", "n_cases": 1, "seed": 42},
             "hyperfine": {"method": "pdip", "file": str(geometry), "paramagnetic_centre": [0, 0, 0], "spin": 0.5, "orbit": 3, "total_momentum_J": 3.5},
-            "nuclei": {"include": "H"}, "diamagnetic": {"range_min_ppm": 0, "range_max_ppm": 10},
+            "nuclei": {"include": "H"}, "diamagnetic": {"method": "csv", "file": str(diamagnetic)},
             "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7}, "moments": {"number_of_moments": 3},
-            "linewidth": {"method": "r6", "variables": {"p1": [705.05, 705.05], "p2": [0.25, 0.25]}},
+            "linewidth": {"method": "r6"},
             "susceptibility": {"model": "isoaxrho_euler"},
         }
     )
