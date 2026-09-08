@@ -46,8 +46,8 @@ hyperfine:
 nuclei:
   include: H
 diamagnetic:
-  range_min_ppm: 0.0
-  range_max_ppm: 10.0
+  method: csv
+  file: inputs/diamagnetic.csv
 experiment:
   temperature_k: 302.15
   magnetic_field_t: 4.7
@@ -55,17 +55,20 @@ moments:
   number_of_moments: 10
 linewidth:
   method: r6
-  variables:
-    p1: [500.0, 2000.0]
-    p2: [0.0, 1.0]
 susceptibility:
   model: isoaxrho_euler
 ```
 
 `chi_iso` is calculated through ParaNMR's spin-only Curie-law implementation.
 Synth samples `rho_over_ax` in `[0, 1/3]`, derives physical bounds for
-`chi_ax`, and samples Euler angles in their canonical ZYZ domains. All χ
-targets are exported in canonical ParaNMR units of Å³.
+`chi_ax`, and samples Euler angles in standard ZYZ domains. All χ targets are
+exported in canonical ParaNMR units of Å³.
+
+For `linewidth.method: r6`, Synth derives `p1` from ParaNMR's point-dipole
+Guéron Curie R2 calculation with the fixed generation policy
+`tau_R = 1 ns`. It samples the distance-independent `p2` uniformly in
+`[0, 50] Hz`, then converts it to the ppm convention required by ParaNMR's R6
+forward model. Neither coefficient is a user-facing configuration parameter.
 
 ## CLI
 

@@ -16,7 +16,16 @@ if TYPE_CHECKING:
 def write_linewidth(*, latent: LinewidthLatents, output_file: Path) -> None:
     """Write R6 linewidth parameters for synthetic-truth comparison."""
     write_csv_safe(
-        pd.DataFrame([{"method": "r6", "p1": latent.p1, "p2": latent.p2}]),
+        pd.DataFrame(
+            [
+                {
+                    "method": "r6_curie",
+                    "p1": latent.p1,
+                    "p2": latent.p2,
+                    "p2_hz": latent.p2_hz,
+                }
+            ]
+        ),
         output_file,
         float_format="%.15g",
     )

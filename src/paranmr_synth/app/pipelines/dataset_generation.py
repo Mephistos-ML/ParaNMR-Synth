@@ -87,6 +87,7 @@ def generate_case_artifacts(
     )
     linewidth = generate_linewidth_latents(
         config=config,
+        molecule=molecule,
         geometry_checksum=geometry_checksum,
         case_index=case_index,
     )

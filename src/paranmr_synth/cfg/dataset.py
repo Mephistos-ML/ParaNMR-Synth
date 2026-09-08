@@ -12,7 +12,6 @@ from paranmr_synth.cfg.models import (
     DiamagneticConfig, ExperimentConfig, HyperfineConfig, LinewidthConfig,
     ProjectConfig, SusceptibilityConfig,
 )
-from paranmr_synth.core.generators.specs import ParameterSpec
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,7 +67,6 @@ class DatasetGenerationConfig:
         model = str(susceptibility["model"]).lower()
         if model != "isoaxrho_euler":
             raise ValueError("susceptibility.model must be 'isoaxrho_euler'")
-        linewidth_variables = _mapping(linewidth, "variables")
         centre = tuple(float(value) for value in hyperfine["paramagnetic_centre"])
         if len(centre) != 3:
             raise ValueError("hyperfine.paramagnetic_centre must have three values")
@@ -105,7 +103,7 @@ class DatasetGenerationConfig:
             ),
             experiment=ExperimentConfig(float(experiment["temperature_k"]), float(experiment["magnetic_field_t"])),
             number_of_moments=number_of_moments,
-            linewidth=LinewidthConfig(linewidth_method, ParameterSpec.from_raw(linewidth_variables["p1"]), ParameterSpec.from_raw(linewidth_variables["p2"])),
+            linewidth=LinewidthConfig(linewidth_method),
             susceptibility=SusceptibilityConfig(model),
         )
 
