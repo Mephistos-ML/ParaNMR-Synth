@@ -12,21 +12,18 @@ from paranmr_synth.io.csv.csv_util import write_csv_safe
 if TYPE_CHECKING:
     from paranmr_synth.core.dataset.records import TensorTarget
     from paranmr_synth.core.generators.susceptibility import SusceptibilityLatents
-    from paranmr_synth.cfg.dataset import DatasetGenerationConfig
 
 
 def write_susceptibility(
-    *, target: TensorTarget, latent: SusceptibilityLatents, config: DatasetGenerationConfig, output_file: Path
+    *, target: TensorTarget, latent: SusceptibilityLatents, output_file: Path
 ) -> None:
     """Write Cartesian χ and its sampled parameterization."""
-    from paranmr.app.policies.susc import resolve_susc_fit_variables
-    _, fixed = resolve_susc_fit_variables(raw_variables={"ax": ["fix", 1.0]}, input_units=config.susceptibility.input_units, temperature=config.experiment.temperature_k, spin=config.hyperfine.spin)
-    scale = fixed["ax"]
     row = {
-        **{key: value / scale for key, value in target.as_row().items() if key.startswith("chi_")},
-        "iso": latent.iso / scale,
-        "ax": latent.ax / scale,
-        "rho_over_ax": latent.rho_over_ax,
+        **target.as_row(),
+        "chi_iso": latent.iso,
+        "chi_ax": latent.ax,
+        "chi_rh": latent.ax * latent.rho_over_ax,
+        "rh_over_ax": latent.rho_over_ax,
         "alpha": latent.alpha,
         "beta": latent.beta,
         "gamma": latent.gamma,

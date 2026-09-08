@@ -49,11 +49,6 @@ def test_controlled_synthetic_case_recovers_chi_and_linewidth(tmp_path: Path):
             },
             "susceptibility": {
                 "model": "isoaxrho_euler",
-                "variables": {
-                    "ax": [0.01, 0.01],
-                    "rho_over_ax": [0.1, 0.1], "alpha": [0, 0],
-                    "beta": [0, 0], "gamma": [0, 0],
-                },
             },
         }
     )

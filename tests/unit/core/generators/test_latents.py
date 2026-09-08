@@ -13,7 +13,7 @@ def test_latent_sampling_is_stable_per_case_and_parameter():
         "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
         "moments": {"number_of_moments": 10},
         "linewidth": {"method": "r6", "variables": {"p1": [500, 2000], "p2": [0, 1]}},
-        "susceptibility": {"model": "isoaxrho_euler", "variables": {"ax": [-0.08, 0.08], "rho_over_ax": [0, 1 / 3], "alpha": [0, 360], "beta": [0, 180], "gamma": [0, 360]}},
+        "susceptibility": {"model": "isoaxrho_euler"},
     }
     config = DatasetGenerationConfig.from_mapping(raw)
     first = generate_susceptibility_latents(config=config, geometry_checksum="abc", case_index=0)
@@ -29,5 +29,11 @@ def test_latent_sampling_is_stable_per_case_and_parameter():
         total_momentum_J=config.hyperfine.total_momentum_j,
         temperature=config.experiment.temperature_k,
     )
+    principal_components = (
+        first.iso + first.ax * (first.rho_over_ax - 1.0 / 3.0),
+        first.iso - first.ax * (first.rho_over_ax + 1.0 / 3.0),
+        first.iso + 2.0 * first.ax / 3.0,
+    )
+    assert min(principal_components) >= 0.0
     assert 0.0 <= first.rho_over_ax <= 1.0 / 3.0
     assert 500.0 <= linewidth.p1 <= 2000.0

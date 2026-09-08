@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from paranmr.app.policies.susc import normalize_susc_fit_input_units
 
 from paranmr_synth.cfg.models import (
     DiamagneticConfig, ExperimentConfig, HyperfineConfig, LinewidthConfig,
@@ -69,12 +68,7 @@ class DatasetGenerationConfig:
         model = str(susceptibility["model"]).lower()
         if model != "isoaxrho_euler":
             raise ValueError("susceptibility.model must be 'isoaxrho_euler'")
-        input_units = normalize_susc_fit_input_units(susceptibility.get("input_units"))
         linewidth_variables = _mapping(linewidth, "variables")
-        susceptibility_variables = _mapping(susceptibility, "variables")
-        rho_over_ax = ParameterSpec.from_raw(susceptibility_variables["rho_over_ax"])
-        if rho_over_ax.lower < 0.0 or rho_over_ax.upper > 1.0 / 3.0:
-            raise ValueError("rho_over_ax bounds must lie within [0, 1/3]")
         centre = tuple(float(value) for value in hyperfine["paramagnetic_centre"])
         if len(centre) != 3:
             raise ValueError("hyperfine.paramagnetic_centre must have three values")
@@ -112,7 +106,7 @@ class DatasetGenerationConfig:
             experiment=ExperimentConfig(float(experiment["temperature_k"]), float(experiment["magnetic_field_t"])),
             number_of_moments=number_of_moments,
             linewidth=LinewidthConfig(linewidth_method, ParameterSpec.from_raw(linewidth_variables["p1"]), ParameterSpec.from_raw(linewidth_variables["p2"])),
-            susceptibility=SusceptibilityConfig(model, input_units, ParameterSpec.from_raw(susceptibility_variables["ax"]), rho_over_ax, ParameterSpec.from_raw(susceptibility_variables["alpha"]), ParameterSpec.from_raw(susceptibility_variables["beta"]), ParameterSpec.from_raw(susceptibility_variables["gamma"])),
+            susceptibility=SusceptibilityConfig(model),
         )
 
     @property

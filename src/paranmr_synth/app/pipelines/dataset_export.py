@@ -38,7 +38,7 @@ def generate_dataset(
     root.mkdir(parents=True, exist_ok=True)
     for case in cases:
         _write_case(config=config, case=case, root=root)
-    write_ml_dataset(cases=cases, config=config, output_file=root / "dataset.csv")
+    write_ml_dataset(cases=cases, output_file=root / "dataset.csv")
     write_manifest(
         config=config,
         output_file=root / "manifest.json",
@@ -59,7 +59,6 @@ def _write_case(*, config: DatasetGenerationConfig, case: GeneratedCase, root: P
     write_susceptibility(
         target=case.record.target,
         latent=case.susceptibility,
-        config=config,
         output_file=truth_dir / "susceptibility.csv",
     )
     write_linewidth(latent=case.linewidth, output_file=truth_dir / "linewidth.csv")

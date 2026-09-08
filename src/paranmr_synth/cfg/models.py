@@ -47,9 +47,3 @@ class LinewidthConfig:
 @dataclass(frozen=True, slots=True)
 class SusceptibilityConfig:
     model: str
-    input_units: str
-    ax: ParameterSpec
-    rho_over_ax: ParameterSpec
-    alpha: ParameterSpec
-    beta: ParameterSpec
-    gamma: ParameterSpec

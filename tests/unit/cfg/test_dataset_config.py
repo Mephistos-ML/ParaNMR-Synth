@@ -19,7 +19,7 @@ def _config(number_of_moments: int = 10) -> dict:
         "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
         "moments": {"number_of_moments": number_of_moments},
         "linewidth": {"method": "r6", "variables": {"p1": [500.0, 2000.0], "p2": [0.0, 1.0]}},
-        "susceptibility": {"model": "isoaxrho_euler", "variables": {"ax": [-0.08, 0.08], "rho_over_ax": [0.0, 0.3333333333], "alpha": [0.0, 360.0], "beta": [0.0, 180.0], "gamma": [0.0, 360.0]}},
+        "susceptibility": {"model": "isoaxrho_euler"},
     }
 
 
