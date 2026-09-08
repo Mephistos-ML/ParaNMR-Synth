@@ -20,9 +20,8 @@ _TENSOR_COLUMNS = {
 def validate_dataset_case(case_dir: str | Path) -> Path:
     """Write a factual truth-vs-fit report for one completed replayable case."""
     root = Path(case_dir)
-    truth_dir = root / "synthetic_output"
-    fitted_dir = root / "fit" / "paranmr_fitted_output"
-    truth_susceptibility = _read_one_row(truth_dir / "susceptibility.csv")
+    truth_susceptibility = _read_one_row(root / "DATA" / "CHI" / "susceptibility.csv")
+    fitted_dir = root / "SIMULATIONS" / "FITTING" / "paranmr_fitted_output"
     fitted_susceptibility = _read_one_row(fitted_dir / "susceptibility_tensor.csv")
     fitted_linewidth = _read_one_row(_linewidth_output_file(fitted_dir))
     linewidth_truth = _read_dataset_linewidth_truth(root)

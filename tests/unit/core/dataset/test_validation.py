@@ -6,8 +6,8 @@ from paranmr_synth.app.pipelines.dataset_validation import validate_dataset_case
 
 def test_validate_dataset_case_writes_truth_vs_fit_report(tmp_path: Path):
     case_dir = tmp_path / "cases" / "case"
-    truth = case_dir / "synthetic_output"
-    fitted = case_dir / "fit" / "paranmr_fitted_output"
+    truth = case_dir / "DATA" / "CHI"
+    fitted = case_dir / "SIMULATIONS" / "FITTING" / "paranmr_fitted_output"
     truth.mkdir(parents=True)
     fitted.mkdir(parents=True)
     (truth / "susceptibility.csv").write_text(

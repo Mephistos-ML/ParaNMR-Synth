@@ -43,16 +43,16 @@ def test_generate_dataset_writes_replayable_cases_and_paired_ml_table(tmp_path: 
         "chi_yy", "chi_yz", "chi_zz", "linewidth_p1", "linewidth_p2",
     }
     case_root = root / "cases" / rows[0]["sample_id"]
-    fit_config = case_root / "fit" / "config.yml"
+    fit_config = case_root / "SIMULATIONS" / "FITTING" / "config.yml"
     assert fit_config.is_file()
-    assert (case_root / "fit" / "geometry.xyz").is_file()
-    assert (case_root / "fit" / "generated_shifts.csv").is_file()
-    assert (case_root / "fit" / "diamagnetic_input.csv").is_file()
-    assert (case_root / "synthetic_output" / "susceptibility.csv").is_file()
+    assert (case_root / "DATA" / "HFC" / "geometry.xyz").is_file()
+    assert (case_root / "DATA" / "PARA" / "generated_shifts.csv").is_file()
+    assert (case_root / "DATA" / "DIA" / "diamagnetic.csv").is_file()
+    assert (case_root / "DATA" / "CHI" / "susceptibility.csv").is_file()
     csv_artifacts = [
         root / "dataset.csv",
-        case_root / "fit" / "generated_shifts.csv",
-        case_root / "synthetic_output" / "susceptibility.csv",
+        case_root / "DATA" / "PARA" / "generated_shifts.csv",
+        case_root / "DATA" / "CHI" / "susceptibility.csv",
     ]
     for artifact in csv_artifacts:
         assert artifact.read_text(encoding="utf-8-sig").startswith(
@@ -85,7 +85,7 @@ def test_fixed_profile_exports_paranmr_r6_linewidth_estimation(tmp_path: Path):
     )
 
     root = generate_dataset(config=config, output_dir=tmp_path / "output")
-    fit_config = next((root / "cases").glob("*/fit/config.yml"))
+    fit_config = next((root / "cases").glob("*/SIMULATIONS/FITTING/config.yml"))
 
     parsed = FitSuscConfig.from_file(fit_config)
     assert parsed.linewidth_method == "experimental"

@@ -16,17 +16,17 @@ def write_fit_config(*, config: DatasetGenerationConfig, output_file: Path) -> N
     payload = {
         "project": {"name": "paranmr_fitted_output"},
         "hyperfine": {
-            "method": "pdip", "file": "geometry.xyz",
+            "method": "pdip", "file": "../../DATA/HFC/geometry.xyz",
             "paramagnetic_centre": list(config.hyperfine.paramagnetic_centre),
             "spin": config.hyperfine.spin, "orbit": config.hyperfine.orbit,
             "total_momentum_J": config.hyperfine.total_momentum_j,
         },
         "nuclei": {"include": config.nuclei_include},
         "diamagnetic": {
-            "method": config.diamagnetic.method,
-            "file": _replay_input_name("diamagnetic_input", config.diamagnetic.file),
+            "method": "csv",
+            "file": "../../DATA/DIA/diamagnetic.csv",
         },
-        "experiment": {"files": "generated_shifts.csv"},
+        "experiment": {"files": "../../DATA/PARA/generated_shifts.csv"},
         "assignment": {"method": "fixed"},
         "linewidth": {"method": "experimental", "estimate": "p1_p2"},
         "susc_fit": {
@@ -37,18 +37,8 @@ def write_fit_config(*, config: DatasetGenerationConfig, output_file: Path) -> N
             },
         },
     }
-    if config.diamagnetic.reference_file:
-        payload["diamagnetic_ref"] = {
-            "method": config.diamagnetic.reference_method,
-            "file": _replay_input_name(
-                "diamagnetic_reference_input", config.diamagnetic.reference_file
-            ),
-        }
+    if config.signal_labels_file:
+        payload["signal_labels"] = {"file": "../../DATA/LABELS/labels.csv"}
     output_file.parent.mkdir(parents=True, exist_ok=True)
     with output_file.open("w", encoding="utf-8") as handle:
         yaml.safe_dump(payload, handle, sort_keys=False)
-
-
-def _replay_input_name(prefix: str, source_file: str) -> str:
-    """Return the replay filename used by the paired dataset exporter."""
-    return prefix + Path(source_file).suffix

@@ -57,8 +57,8 @@ def test_controlled_synthetic_case_recovers_chi_and_linewidth(tmp_path: Path):
     )
     root = generate_dataset(config=config, output_dir=tmp_path / "output")
     case_dir = next((root / "cases").iterdir())
-    fit_dir = case_dir / "fit"
-    truth = _read_one_row(case_dir / "synthetic_output" / "susceptibility.csv")
+    fit_dir = case_dir / "SIMULATIONS" / "FITTING"
+    truth = _read_one_row(case_dir / "DATA" / "CHI" / "susceptibility.csv")
     _fix_control_nuisance_variables(fit_dir / "config.yml", truth=truth)
     environment = {**os.environ, "MPLBACKEND": "Agg", "MPLCONFIGDIR": str(tmp_path / "mpl")}
     result = subprocess.run(
