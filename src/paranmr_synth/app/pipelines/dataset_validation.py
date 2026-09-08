@@ -20,16 +20,14 @@ _TENSOR_COLUMNS = {
 def validate_dataset_case(case_dir: str | Path) -> Path:
     """Write a factual truth-vs-fit report for one completed replayable case."""
     root = Path(case_dir)
-    truth_dir = root / "synthetic_output"
-    fitted_dir = root / "fit" / "paranmr_fitted_output"
-    truth_susceptibility = _read_one_row(truth_dir / "susceptibility.csv")
-    truth_linewidth = _read_one_row(truth_dir / "linewidth.csv")
+    truth_susceptibility = _read_one_row(root / "DATA" / "CHI" / "susceptibility.csv")
+    fitted_dir = root / "SIMULATIONS" / "FITTING" / "paranmr_fitted_output"
     fitted_susceptibility = _read_one_row(fitted_dir / "susceptibility_tensor.csv")
     fitted_linewidth = _read_one_row(_linewidth_output_file(fitted_dir))
+    linewidth_truth = _read_dataset_linewidth_truth(root)
     truth = {
         **{name: float(truth_susceptibility[name]) for name in _TENSOR_COLUMNS},
-        "linewidth_p1": float(truth_linewidth["p1"]),
-        "linewidth_p2": float(truth_linewidth["p2"]),
+        **linewidth_truth,
     }
     fitted = {
         **{
@@ -63,6 +61,23 @@ def _read_one_row(file_name: Path) -> dict[str, str]:
     if len(rows) != 1:
         raise ValueError(f"Expected exactly one data row in {file_name}")
     return rows[0]
+
+
+def _read_dataset_linewidth_truth(case_dir: Path) -> dict[str, float]:
+    """Read one case's linewidth truth from the root ML dataset artifact."""
+    dataset_file = case_dir.parent.parent / "dataset.csv"
+    with dataset_file.open(encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(line for line in handle if not line.startswith("#")))
+    matching_rows = [row for row in rows if row.get("sample_id") == case_dir.name]
+    if len(matching_rows) != 1:
+        raise ValueError(
+            f"Expected exactly one dataset.csv row for sample {case_dir.name!r}"
+        )
+    row = matching_rows[0]
+    return {
+        "linewidth_p1": float(row["linewidth_p1"]),
+        "linewidth_p2": float(row["linewidth_p2"]),
+    }
 
 
 def _single_file(directory: Path, prefix: str, *, suffix: str) -> Path:

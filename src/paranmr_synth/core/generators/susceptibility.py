@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from paranmr.core.phys.susc import get_spin_only_susc
 from paranmr_synth.core.generators.deterministic import unit_interval_draw
-from paranmr.app.policies.susc import resolve_susc_fit_variables
 
 if TYPE_CHECKING:
     from paranmr_synth.cfg.dataset import DatasetGenerationConfig
@@ -33,21 +33,24 @@ def generate_susceptibility_latents(
             config.project.seed, geometry_checksum, case_index, name
         )
 
-    sampled = {
-        "iso": draw("iso", config.susceptibility.iso.lower, config.susceptibility.iso.upper),
-        "ax": draw("ax", config.susceptibility.ax.lower, config.susceptibility.ax.upper),
-    }
-    _, canonical = resolve_susc_fit_variables(
-        raw_variables={name: ["fix", value] for name, value in sampled.items()},
-        input_units=config.susceptibility.input_units,
-        temperature=config.experiment.temperature_k,
+    iso = get_spin_only_susc(
         spin=config.hyperfine.spin,
+        orbit=config.hyperfine.orbit,
+        total_momentum_J=config.hyperfine.total_momentum_j,
+        temperature=config.experiment.temperature_k,
     )
+    rho_over_ax = draw("rho_over_ax", 0.0, 1.0 / 3.0)
+    ax_lower, ax_upper = _ax_bounds(iso=iso, rho_over_ax=rho_over_ax)
     return SusceptibilityLatents(
-        iso=canonical["iso"],
-        ax=canonical["ax"],
-        rho_over_ax=draw("rho_over_ax", config.susceptibility.rho_over_ax.lower, config.susceptibility.rho_over_ax.upper),
-        alpha=draw("alpha", config.susceptibility.alpha.lower, config.susceptibility.alpha.upper),
-        beta=draw("beta", config.susceptibility.beta.lower, config.susceptibility.beta.upper),
-        gamma=draw("gamma", config.susceptibility.gamma.lower, config.susceptibility.gamma.upper),
+        iso=iso,
+        ax=draw("ax", ax_lower, ax_upper),
+        rho_over_ax=rho_over_ax,
+        alpha=draw("alpha", 0.0, 360.0),
+        beta=draw("beta", 0.0, 180.0),
+        gamma=draw("gamma", 0.0, 360.0),
     )
+
+
+def _ax_bounds(*, iso: float, rho_over_ax: float) -> tuple[float, float]:
+    """Return axiality bounds that keep all principal χ components non-negative."""
+    return -1.5 * iso, iso / (rho_over_ax + 1.0 / 3.0)

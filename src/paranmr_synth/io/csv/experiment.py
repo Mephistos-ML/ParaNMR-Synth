@@ -24,7 +24,7 @@ def write_experiment(
     gamma = NUCLEAR_GAMMAS[remove_numbers(config.nuclei_include)]
     rows = [
         {
-            "signal_label ()": peak.label,
+            "signal_label": peak.label,
             "shift (ppm)": peak.center_ppm,
             "width (Hz)": peak.fwhm_ppm * gamma * config.experiment.magnetic_field_t,
             "area ()": peak.area,

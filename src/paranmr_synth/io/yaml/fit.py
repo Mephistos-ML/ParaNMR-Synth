@@ -16,14 +16,17 @@ def write_fit_config(*, config: DatasetGenerationConfig, output_file: Path) -> N
     payload = {
         "project": {"name": "paranmr_fitted_output"},
         "hyperfine": {
-            "method": "pdip", "file": "geometry.xyz",
+            "method": "pdip", "file": "../../DATA/HFC/geometry.xyz",
             "paramagnetic_centre": list(config.hyperfine.paramagnetic_centre),
             "spin": config.hyperfine.spin, "orbit": config.hyperfine.orbit,
             "total_momentum_J": config.hyperfine.total_momentum_j,
         },
         "nuclei": {"include": config.nuclei_include},
-        "diamagnetic": {"method": "csv", "file": "diamagnetic.csv"},
-        "experiment": {"files": "generated_shifts.csv"},
+        "diamagnetic": {
+            "method": "csv",
+            "file": "../../DATA/DIA/diamagnetic.csv",
+        },
+        "experiment": {"files": "../../DATA/PARA/generated_shifts.csv"},
         "assignment": {"method": "fixed"},
         "linewidth": {"method": "experimental", "estimate": "p1_p2"},
         "susc_fit": {
@@ -34,6 +37,8 @@ def write_fit_config(*, config: DatasetGenerationConfig, output_file: Path) -> N
             },
         },
     }
+    if config.signal_labels_file:
+        payload["signal_labels"] = {"file": "../../DATA/LABELS/labels.csv"}
     output_file.parent.mkdir(parents=True, exist_ok=True)
     with output_file.open("w", encoding="utf-8") as handle:
         yaml.safe_dump(payload, handle, sort_keys=False)

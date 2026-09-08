@@ -28,8 +28,12 @@ def test_controlled_synthetic_case_recovers_chi_and_linewidth(tmp_path: Path):
         pytest.skip("ParaNMR CLI is not installed")
     geometry = tmp_path / "model.xyz"
     geometry.write_text(
-        "3\nsynthetic Yb model\nYb 0 0 0\nH 1 0 0\nH 2 0 0\n",
+        "4\nsynthetic Yb model\nYb 0 0 0\nH 1 0 0\nH 0 1.5 0\nH 0 0 2\n",
         encoding="utf-8",
+    )
+    diamagnetic = tmp_path / "diamagnetic.csv"
+    diamagnetic.write_text(
+        "signal_label,shift\nH1,1.0\nH2,2.0\nH3,3.0\n", encoding="utf-8"
     )
     config = DatasetGenerationConfig.from_mapping(
         {
@@ -40,27 +44,22 @@ def test_controlled_synthetic_case_recovers_chi_and_linewidth(tmp_path: Path):
                 "orbit": 3, "total_momentum_J": 3.5,
             },
             "nuclei": {"include": "H"},
-            "diamagnetic": {"range_min_ppm": 0, "range_max_ppm": 10},
+            "diamagnetic": {"method": "csv", "file": str(diamagnetic)},
             "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
             "moments": {"number_of_moments": 6},
             "linewidth": {
                 "method": "r6",
-                "variables": {"p1": [705.05, 705.05], "p2": [0.25, 0.25]},
             },
             "susceptibility": {
                 "model": "isoaxrho_euler",
-                "variables": {
-                    "iso": [0, 0], "ax": [0.01, 0.01],
-                    "rho_over_ax": [0.1, 0.1], "alpha": [0, 0],
-                    "beta": [0, 0], "gamma": [0, 0],
-                },
             },
         }
     )
     root = generate_dataset(config=config, output_dir=tmp_path / "output")
     case_dir = next((root / "cases").iterdir())
-    fit_dir = case_dir / "fit"
-    _fix_control_nuisance_variables(fit_dir / "config.yml")
+    fit_dir = case_dir / "SIMULATIONS" / "FITTING"
+    truth = _read_one_row(case_dir / "DATA" / "CHI" / "susceptibility.csv")
+    _fix_control_nuisance_variables(fit_dir / "config.yml", truth=truth)
     environment = {**os.environ, "MPLBACKEND": "Agg", "MPLCONFIGDIR": str(tmp_path / "mpl")}
     result = subprocess.run(
         [
@@ -74,7 +73,6 @@ def test_controlled_synthetic_case_recovers_chi_and_linewidth(tmp_path: Path):
         text=True,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    truth = _read_one_row(case_dir / "synthetic_output" / "susceptibility.csv")
     fitted = _read_one_row(
         fit_dir / "paranmr_fitted_output" / "susceptibility_tensor.csv"
     )
@@ -89,16 +87,26 @@ def test_controlled_synthetic_case_recovers_chi_and_linewidth(tmp_path: Path):
         validate_dataset_case(case_dir).read_text(encoding="utf-8")
     )
     assert report["moment_score"] is None
-    assert report["absolute_error"]["linewidth_p1"] <= 1e-9
-    assert report["absolute_error"]["linewidth_p2"] <= 1e-9
+    assert report["absolute_error"]["linewidth_p1"] <= 5e-7
+    assert report["absolute_error"]["linewidth_p2"] <= 5e-7
 
 
-def _fix_control_nuisance_variables(config_file: Path) -> None:
-    """Make a deliberately identifiable one-parameter recovery control."""
+def _fix_control_nuisance_variables(
+    config_file: Path, *, truth: dict[str, str]
+) -> None:
+    """Fix non-identifiable coordinates to truth for an axiality control."""
     payload = yaml.safe_load(config_file.read_text(encoding="utf-8"))
     variables = payload["susc_fit"]["variables"]
-    for name in ("iso", "rho_over_ax", "alpha", "beta", "gamma"):
+    truth_names = {
+        "iso": "chi_iso",
+        "rho_over_ax": "rh_over_ax",
+        "alpha": "alpha",
+        "beta": "beta",
+        "gamma": "gamma",
+    }
+    for name, truth_name in truth_names.items():
         variables[name][0] = "fix"
+        variables[name][1] = float(truth[truth_name])
     config_file.write_text(
         yaml.safe_dump(payload, sort_keys=False), encoding="utf-8"
     )

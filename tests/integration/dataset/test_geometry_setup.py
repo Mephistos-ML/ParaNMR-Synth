@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from paranmr_synth.app.pipelines.dataset_generation import generate_cases, prepare_dataset_molecule
-from paranmr_synth.app.pipelines.dataset_generation import generate_case, simulate_peaks
+from paranmr_synth.app.pipelines.dataset_generation import generate_case, generate_case_artifacts, simulate_peaks
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
 from paranmr_synth.core.generators.linewidth import LinewidthLatents
 from paranmr_synth.core.generators.susceptibility import SusceptibilityLatents
@@ -13,6 +13,8 @@ def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path:
         "3\nsynthetic Yb model\nYb 0.0 0.0 0.0\nH 1.0 0.0 0.0\nH 0.0 1.0 0.0\n",
         encoding="utf-8",
     )
+    diamagnetic = tmp_path / "diamagnetic.csv"
+    diamagnetic.write_text("signal_label,shift\nH1,1.0\nH2,2.0\n", encoding="utf-8")
     config = DatasetGenerationConfig.from_mapping(
         {
             "project": {"name": "test", "n_cases": 1, "seed": 42},
@@ -25,11 +27,11 @@ def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path:
                 "total_momentum_J": 3.5,
             },
             "nuclei": {"include": "H"},
-            "diamagnetic": {"range_min_ppm": 0.0, "range_max_ppm": 10.0},
+            "diamagnetic": {"method": "csv", "file": str(diamagnetic)},
             "experiment": {"temperature_k": 302.15, "magnetic_field_t": 4.7},
             "moments": {"number_of_moments": 10},
-            "linewidth": {"method": "r6", "variables": {"p1": [500, 2000], "p2": [0, 1]}},
-            "susceptibility": {"model": "isoaxrho_euler", "variables": {"iso": [0, 0.02], "ax": [-0.08, 0.08], "rho_over_ax": [0, 1 / 3], "alpha": [0, 360], "beta": [0, 180], "gamma": [0, 360]}},
+            "linewidth": {"method": "r6"},
+            "susceptibility": {"model": "isoaxrho_euler"},
         }
     )
 
@@ -38,7 +40,7 @@ def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path:
     assert checksum
     assert [nucleus.label for nucleus in molecule.nuclei] == ["H1", "H2"]
     assert all(nucleus.A.tensor_full is not None for nucleus in molecule.nuclei)
-    assert all(0.0 <= nucleus.shift.dia <= 10.0 for nucleus in molecule.nuclei)
+    assert [nucleus.shift.dia for nucleus in molecule.nuclei] == [1.0, 2.0]
 
     peaks = simulate_peaks(
         molecule=molecule,
@@ -50,7 +52,7 @@ def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path:
             beta=0.0,
             gamma=0.0,
         ),
-        linewidth=LinewidthLatents(p1=705.05, p2=0.25),
+        linewidth=LinewidthLatents(p1=705.05, p2=0.25, p2_hz=50.0),
     )
 
     assert len(peaks) == 2
@@ -64,8 +66,13 @@ def test_prepare_dataset_molecule_attaches_pdip_and_diamagnetic_shifts(tmp_path:
     )
 
     assert tuple(case.moments) == tuple(f"m{index}" for index in range(1, 11))
-    assert case.target.linewidth_p1 >= 500.0
-    assert case.target.linewidth_p1 <= 2000.0
+    assert case.target.linewidth_p1 > 0.0
+
+    artifacts = generate_case_artifacts(
+        config=config, molecule=molecule, geometry_checksum=checksum, case_index=0
+    )
+    assert 0.0 <= artifacts.linewidth.p2_hz <= 50.0
+    assert artifacts.linewidth.p2 == artifacts.linewidth.p2_hz / (42.57747844 * 4.7)
 
     batch = generate_cases(config)
 
