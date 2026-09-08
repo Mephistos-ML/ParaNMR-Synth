@@ -2,23 +2,29 @@
 
 `ParaNMR-Synth` generates deterministic, replayable synthetic pNMR datasets for supervised learning and validation of ParaNMR fitting workflows.
 
-Each synthetic case contains a ParaNMR-ready fixed-assignment fit input and hidden synthetic truth. The dataset root also contains one paired ML table:
+Each synthetic case follows the layout of a ParaNMR example. The dataset root
+also contains one paired ML table:
 
 ```text
 dataset.csv
 manifest.json
 cases/<sample_id>/
-  fit/
-    config.yml
-    geometry.xyz
-    generated_shifts.csv
-    diamagnetic.csv
-  synthetic_output/
-    susceptibility.csv
-    linewidth.csv
+  DATA/
+    PARA/generated_shifts.csv
+    HFC/geometry.xyz
+    DIA/diamagnetic.csv
+    CHI/susceptibility.csv
+    LABELS/labels.csv              # optional
+  SIMULATIONS/
+    FITTING/config.yml
 ```
 
-`dataset.csv` is the canonical supervised-learning artifact. One row contains `m1..mN` as features and six Cartesian susceptibility components plus `p1,p2` as targets. The selected susceptibility unit is recorded in `manifest.json`. `synthetic_output/` is validation provenance, not an ML input.
+`dataset.csv` is the canonical supervised-learning artifact. One row contains `m1..mN` as features and six Cartesian susceptibility components plus `p1,p2` as targets. The selected susceptibility unit is recorded in `manifest.json`.
+
+`DATA/DIA/diamagnetic.csv` is always atom-resolved and normalized to
+`atom_label,shift`, including when the source input was DFT plus a reference.
+`DATA/CHI/susceptibility.csv` contains susceptibility truth only; linewidth
+truth remains exclusively in the root `dataset.csv`.
 
 ## Requirements
 
@@ -48,6 +54,8 @@ nuclei:
 diamagnetic:
   method: csv
   file: inputs/diamagnetic.csv
+signal_labels:                 # optional
+  file: inputs/labels.csv
 experiment:
   temperature_k: 302.15
   magnetic_field_t: 4.7
@@ -74,9 +82,9 @@ forward model. Neither coefficient is a user-facing configuration parameter.
 
 ```bash
 paranmr-synth dataset generate ybl8.yml --output datasets/yb_v1
-cd datasets/yb_v1/cases/<sample_id>/fit
+cd datasets/yb_v1/cases/<sample_id>/SIMULATIONS/FITTING
 MPLBACKEND=Agg paranmr --hide fit_susc config.yml
-paranmr-synth dataset validate ../
+paranmr-synth dataset validate ../..
 ```
 
 `validation_report.json` records truth, fitted values and errors. It does not silently reject a sample based on rank, condition number or score.
