@@ -20,6 +20,7 @@ class DatasetGenerationConfig:
 
     project: ProjectConfig
     hyperfine: HyperfineConfig
+    signal_labels_file: str
     nuclei_include: str
     diamagnetic: DiamagneticConfig
     experiment: ExperimentConfig
@@ -39,7 +40,7 @@ class DatasetGenerationConfig:
         hyperfine_file = Path(str(hyperfine["file"]))
         if not hyperfine_file.is_absolute():
             hyperfine["file"] = str(path.parent / hyperfine_file)
-        for section in ("diamagnetic", "diamagnetic_ref"):
+        for section in ("diamagnetic", "diamagnetic_ref", "signal_labels"):
             value = raw.get(section)
             if isinstance(value, dict) and "file" in value:
                 file_name = Path(str(value["file"]))
@@ -53,6 +54,9 @@ class DatasetGenerationConfig:
         project = _mapping(raw, "project")
         hyperfine = _mapping(raw, "hyperfine")
         nuclei = _mapping(raw, "nuclei")
+        signal_labels = raw.get("signal_labels", {})
+        if not isinstance(signal_labels, dict):
+            raise ValueError("signal_labels must be a mapping")
         diamagnetic = _mapping(raw, "diamagnetic")
         experiment = _mapping(raw, "experiment")
         moments = _mapping(raw, "moments")
@@ -97,6 +101,7 @@ class DatasetGenerationConfig:
         return cls(
             project=ProjectConfig(_nonempty(project["name"], "project.name"), n_cases, int(project["seed"])),
             hyperfine=HyperfineConfig(_nonempty(hyperfine["file"], "hyperfine.file"), centre, float(hyperfine["spin"]), float(hyperfine["orbit"]), float(hyperfine["total_momentum_J"])),
+            signal_labels_file=str(signal_labels.get("file", "")).strip(),
             nuclei_include=_nonempty(nuclei["include"], "nuclei.include"),
             diamagnetic=DiamagneticConfig(
                 diamagnetic_method, diamagnetic_file, reference_method, reference_file

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from paranmr.app.loaders.paramag_centre_load import load_paramagnetic_centre
+from paranmr.app.loaders.labels_load import load_signal_labels_from_csv
 from paranmr.app.loaders.dia_load import load_diamagnetic_shifts
 from paranmr.core.build.elstate import build_electronic_state
 from paranmr.core.build.hfc import build_hfc_from_pdip
@@ -185,6 +186,9 @@ def prepare_dataset_molecule(config: DatasetGenerationConfig) -> tuple[Molecule,
         total_J=config.hyperfine.total_momentum_j,
     )
     build_hfc_from_pdip(molecule)
+    if config.signal_labels_file:
+        labels, math_labels = load_signal_labels_from_csv(config.signal_labels_file)
+        molecule.apply_signal_labels(labels, math_labels)
     checksum = geometry_checksum(labels=tuple(molecule.labels), coordinates=molecule.coords)
     dia_by_key, key_kind, ref_avg_by_label_nn = load_diamagnetic_shifts(
         file_name=config.diamagnetic.file,
