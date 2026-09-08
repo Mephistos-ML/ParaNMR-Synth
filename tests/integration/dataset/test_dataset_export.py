@@ -49,12 +49,10 @@ def test_generate_dataset_writes_replayable_cases_and_paired_ml_table(tmp_path: 
     assert (case_root / "fit" / "generated_shifts.csv").is_file()
     assert (case_root / "fit" / "diamagnetic_input.csv").is_file()
     assert (case_root / "synthetic_output" / "susceptibility.csv").is_file()
-    assert (case_root / "synthetic_output" / "linewidth.csv").is_file()
     csv_artifacts = [
         root / "dataset.csv",
         case_root / "fit" / "generated_shifts.csv",
         case_root / "synthetic_output" / "susceptibility.csv",
-        case_root / "synthetic_output" / "linewidth.csv",
     ]
     for artifact in csv_artifacts:
         assert artifact.read_text(encoding="utf-8-sig").startswith(

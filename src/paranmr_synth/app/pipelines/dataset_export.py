@@ -12,7 +12,6 @@ from paranmr_synth.app.pipelines.dataset_generation import (
 )
 from paranmr_synth.cfg.dataset import DatasetGenerationConfig
 from paranmr_synth.io.csv.experiment import write_experiment
-from paranmr_synth.io.csv.linewidth import write_linewidth
 from paranmr_synth.io.csv.ml import write_ml_dataset
 from paranmr_synth.io.csv.susceptibility import write_susceptibility
 from paranmr_synth.io.json.manifest import write_manifest
@@ -61,7 +60,6 @@ def _write_case(*, config: DatasetGenerationConfig, case: GeneratedCase, root: P
         latent=case.susceptibility,
         output_file=truth_dir / "susceptibility.csv",
     )
-    write_linewidth(latent=case.linewidth, output_file=truth_dir / "linewidth.csv")
 
 
 def _copy_diamagnetic_inputs(

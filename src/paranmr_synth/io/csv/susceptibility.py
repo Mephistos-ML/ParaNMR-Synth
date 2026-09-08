@@ -19,7 +19,12 @@ def write_susceptibility(
 ) -> None:
     """Write Cartesian χ and its sampled parameterization."""
     row = {
-        **target.as_row(),
+        "chi_xx": target.chi_xx,
+        "chi_xy": target.chi_xy,
+        "chi_xz": target.chi_xz,
+        "chi_yy": target.chi_yy,
+        "chi_yz": target.chi_yz,
+        "chi_zz": target.chi_zz,
         "chi_iso": latent.iso,
         "chi_ax": latent.ax,
         "chi_rh": latent.ax * latent.rho_over_ax,
