@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.4.0 (2026-09-14)
+
+### Features
+
+- **dataset**: Export assignment-free GMM fit config
+  ([`fcb8253`](https://github.com/Mephistos-ML/ParaNMR-Synth/commit/fcb82536fbb05b3e6829cf3ce90e6de3a9feb77a))
+
+
 ## v0.3.0 (2026-09-08)
 
 ### Bug Fixes
