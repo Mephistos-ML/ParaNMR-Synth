@@ -1,4 +1,4 @@
-"""Write ParaNMR fixed-assignment fit configurations."""
+"""Write runnable ParaNMR replay and assignment-free GMM configurations."""
 
 from __future__ import annotations
 
@@ -39,6 +39,54 @@ def write_fit_config(*, config: DatasetGenerationConfig, output_file: Path) -> N
     }
     if config.signal_labels_file:
         payload["signal_labels"] = {"file": "../../DATA/LABELS/labels.csv"}
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    with output_file.open("w", encoding="utf-8") as handle:
+        yaml.safe_dump(payload, handle, sort_keys=False)
+
+
+def write_gmm_fit_config(*, config: DatasetGenerationConfig, output_file: Path) -> None:
+    """Write a fully relaxed, assignment-free GMM fit configuration."""
+    payload = {
+        "project": {"name": "paranmr_gmm_fitted_output"},
+        "hyperfine": {
+            "method": "pdip", "file": "../../DATA/HFC/geometry.xyz",
+            "paramagnetic_centre": list(config.hyperfine.paramagnetic_centre),
+            "spin": config.hyperfine.spin, "orbit": config.hyperfine.orbit,
+            "total_momentum_J": config.hyperfine.total_momentum_j,
+        },
+        "nuclei": {"include": config.nuclei_include},
+        "diamagnetic": {"method": "csv", "file": "../../DATA/DIA/diamagnetic.csv"},
+        "experiment": {"files": "../../DATA/PARA/generated_shifts.csv"},
+        "assignment": {
+            "method": "moments",
+            "moment_objective": {
+                "type": "gmm",
+                "number_of_moments": config.number_of_moments,
+                "covariance": {
+                    "method": "monte_carlo", "n_samples": 500,
+                    "random_seed": config.project.seed,
+                    "perturbation": {
+                        "shift_sigma_abs": 0.02, "width_sigma_rel": 0.05,
+                    },
+                },
+            },
+        },
+        "linewidth": {
+            "method": "r6",
+            "variables": {
+                "p1": ["fit", 1.0, [0.0, 1.0e6]],
+                "p2": ["fit", 0.1, [0.0, 10.0]],
+            },
+        },
+        "susc_fit": {
+            "type": "isoaxrho_euler",
+            "variables": {
+                "iso": ["fit", 0.0], "ax": ["fit", 0.01],
+                "rho_over_ax": ["fit", 0.1], "alpha": ["fit", 0.0],
+                "beta": ["fit", 0.0], "gamma": ["fit", 0.0],
+            },
+        },
+    }
     output_file.parent.mkdir(parents=True, exist_ok=True)
     with output_file.open("w", encoding="utf-8") as handle:
         yaml.safe_dump(payload, handle, sort_keys=False)

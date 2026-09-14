@@ -19,7 +19,7 @@ from paranmr_synth.io.csv.susceptibility import write_susceptibility
 from paranmr_synth.io.csv.csv_util import write_csv_safe
 from paranmr_synth.io.json.manifest import write_manifest
 from paranmr_synth.io.xyz.geometry import write_indexed_geometry
-from paranmr_synth.io.yaml.fit import write_fit_config
+from paranmr_synth.io.yaml.fit import write_fit_config, write_gmm_fit_config
 
 
 def generate_dataset(
@@ -60,6 +60,7 @@ def _write_case(*, config: DatasetGenerationConfig, case: GeneratedCase, molecul
         labels_file.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(config.signal_labels_file, labels_file)
     write_fit_config(config=config, output_file=fitting_dir / "config.yml")
+    write_gmm_fit_config(config=config, output_file=fitting_dir / "gmm_config.yml")
     write_experiment(config=config, case=case, output_file=data_dir / "PARA" / "generated_shifts.csv")
     _write_diamagnetic_csv(molecule=molecule, output_file=data_dir / "DIA" / "diamagnetic.csv")
     write_susceptibility(

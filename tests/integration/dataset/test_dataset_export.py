@@ -44,7 +44,9 @@ def test_generate_dataset_writes_replayable_cases_and_paired_ml_table(tmp_path: 
     }
     case_root = root / "cases" / rows[0]["sample_id"]
     fit_config = case_root / "SIMULATIONS" / "FITTING" / "config.yml"
+    gmm_config = case_root / "SIMULATIONS" / "FITTING" / "gmm_config.yml"
     assert fit_config.is_file()
+    assert gmm_config.is_file()
     assert (case_root / "DATA" / "HFC" / "geometry.xyz").is_file()
     assert (case_root / "DATA" / "PARA" / "generated_shifts.csv").is_file()
     assert (case_root / "DATA" / "DIA" / "diamagnetic.csv").is_file()
@@ -60,6 +62,14 @@ def test_generate_dataset_writes_replayable_cases_and_paired_ml_table(tmp_path: 
         )
     assert "paranmr_fitted_output" in fit_config.read_text()
     assert FitSuscConfig.from_file(fit_config).assignment_method == "fixed"
+    generated_gmm = FitSuscConfig.from_file(gmm_config)
+    assert generated_gmm.assignment_method == "moments"
+    assert generated_gmm.assignment_moment_objective["type"] == "gmm"
+    assert len(generated_gmm.susc_fit_variables) == 6
+    assert all(value[0] == "fit" for value in generated_gmm.susc_fit_variables.values())
+    assert all(
+        value[0] == "fit" for value in generated_gmm.linewidth_variables.values()
+    )
     manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["normalized_config"]["number_of_moments"] == 3
     assert "paranmr_version" in manifest["generator"]
